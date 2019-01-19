@@ -58,7 +58,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "chromedriver": "^2.45.0",
-    "chromium": "^2.1.0",
+    "find-process": "^1.2.1",
     "selenium-webdriver": "^4.0.0-alpha.1",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",

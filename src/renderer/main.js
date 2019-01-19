@@ -16,10 +16,17 @@ new Vue({
   components: { App },
   router,
   store,
-  beforeCreate: () => {
+  created: () => {
     console.log('test')
-    Vue.prototype.$crawler.ssoIndex()
-    console.log(Vue.prototype.$crawler.ssoSource())
+
+    Vue.prototype.$crawler.ssoIndex().then(() => {
+      return Vue.prototype.$crawler.ssoSource()
+    }).then((src) => {
+      console.log(src)
+      return Vue.prototype.$crawler.quit()
+    })
+    // Vue.prototype.$crawler.close()
+    // Vue.prototype.$crawler.quit()
     // console.log(this.$crawler)
   },
   template: '<App/>'

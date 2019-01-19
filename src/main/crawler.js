@@ -1,7 +1,5 @@
 const webdriver = require('selenium-webdriver')
-const chrome = require('selenium-webdriver/chrome')
-const chromium = require('chromium')
-const chromedriver = require('chromedriver')
+require('chromedriver')
 
 class Crawler {
   constructor (sessionId, account, password) {
@@ -9,26 +7,16 @@ class Crawler {
     this.account = account
     this.password = password
     this.initDriver()
-    console.log('ccc')
-    console.log(this.driver)
   }
 
   initDriver () {
-    let options = new chrome.Options()
-    options.setChromeBinaryPath(chromium.path)
-    options.addArguments('--headless')
-    options.addArguments('--no-sandbox')
-    options.addArguments('--disable-dev-shm-usage')
-    options.addArguments('--disable-plugins')
-
-    console.log(webdriver)
-    console.log(chrome)
-    console.log(chromium)
-    console.log(chromedriver)
-
     this.driver = new webdriver.Builder()
+      .withCapabilities({
+        chromeOptions: {
+          args: ['--headless', '--disable-dev-shm-usage', '--disable-plugins']
+        }
+      })
       .forBrowser('chrome')
-      .setChromeOptions(options)
       .build()
 
     this.By = webdriver.By
@@ -51,17 +39,18 @@ class Crawler {
   }
 
   ssoIndex () {
-    this.driver.get('https://webapp.yuntech.edu.tw/workstudy/Home/Index').then(() => {
+    return this.driver.get('https://webapp.yuntech.edu.tw/workstudy/Home/Index').then(() => {
       return this.driver.getSession()
     }).then((session) => {
       this.sessionId = session
+      return this.driver
     }).then(() => {
       var loadMask = this.By.xpath('//div[@id="loading-mask"]')
       return this.driver.wait(this.until.elementsIsPresent(loadMask), 1000).then(() => {
         console.log('Is Present')
         return this.driver.wait(this.until.elementIsNotPresent(loadMask), 3000)
       }).then(() => {
-        return this.driver.getPageSource()
+        return this.driver
       })
     })
   }
@@ -74,6 +63,14 @@ class Crawler {
       src = src.replace(/\/\/ssl/g, 'https://ssl')
       return src
     })
+  }
+
+  close () {
+    this.driver.close()
+  }
+
+  quit () {
+    this.driver.quit()
   }
 }
 
