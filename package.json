@@ -57,12 +57,16 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "bootstrap": "^4.2.1",
     "chromedriver": "^2.45.0",
     "find-process": "^1.2.1",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.6",
     "selenium-webdriver": "^4.0.0-alpha.1",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",
     "vue-router": "^3.0.1",
+    "vue-toasted": "^1.1.26",
     "vuex": "^3.0.1",
     "vuex-electron": "^1.0.0"
   },

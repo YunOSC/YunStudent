@@ -1,11 +1,11 @@
+const http = require('axios')
 const webdriver = require('selenium-webdriver')
 require('chromedriver')
 
 class Crawler {
-  constructor (sessionId, account, password) {
+  constructor (ssoValidateServer, sessionId) {
+    this.ssoValidateServer = ssoValidateServer
     this.sessionId = sessionId
-    this.account = account
-    this.password = password
     this.initDriver()
   }
 
@@ -62,6 +62,61 @@ class Crawler {
       src = src.replace(/href="\/Ext4\//g, 'src="https://webapp.yuntech.edu.tw/Ext4/')
       src = src.replace(/\/\/ssl/g, 'https://ssl')
       return src
+    })
+  }
+
+  ssoLogin (account, password) {
+    return this.driver.get('https://webapp.yuntech.edu.tw/YunTechSSO/Account/Login').then(() => {
+      let validationCode = this.By.xpath('//img[@id="ValidationImage"]')
+      return this.driver.wait(this.until.elementsIsPresent(validationCode), 2000).then(() => {
+        return this.driver.findElement(validationCode).takeScreenshot()
+      })
+    }).then((base64Img) => {
+      return http({
+        url: this.ssoValidateServer + '/validationCode/base64',
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        data: {image: base64Img}
+      }).then((response) => {
+        return response.data
+      })
+    }).then((data) => {
+      if (data.success !== undefined) {
+        return this.driver.findElement(this.By.xpath('//*[@id="pLoginName-inputEl"]')).then((element) => {
+          element.clear()
+          return element.sendKeys(account).then(() => {
+            return this.driver.findElement(this.By.xpath('//*[@id="pLoginPassword-inputEl"]'))
+          })
+        }).then((element) => {
+          element.clear()
+          return element.sendKeys(password).then(() => {
+            return this.driver.findElement(this.By.xpath('//*[@id="pSecretString-inputEl"]'))
+          })
+        }).then((element) => {
+          element.clear()
+          return element.sendKeys(data.code).then(() => {
+            return this.driver.findElement(this.By.xpath('//*[@id="LoginButton-btnInnerEl"]'))
+          })
+        }).then((element) => {
+          element.click()
+          return this.driver.sleep(1000)
+        }).then(() => {
+          return this.driver.getCurrentUrl().then((url) => {
+            return url === 'https://webapp.yuntech.edu.tw/YunTechSSO/Home/Index'
+          })
+        })
+      } else if (data.fail !== undefined) {
+        return false
+      }
+    }).then((result) => {
+      if (!result) {
+        return this.driver.findElement(this.By.xpath('//*[@id="button-1005-btnInnerEl"]')).then((element) => {
+          element.click()
+          return false
+        })
+      } else {
+        return true
+      }
     })
   }
 
