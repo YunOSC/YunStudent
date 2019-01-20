@@ -3,9 +3,9 @@ const webdriver = require('selenium-webdriver')
 require('chromedriver')
 
 class Crawler {
-  constructor (ssoValidateServer, sessionId) {
+  constructor (ssoValidateServer, cookies) {
     this.ssoValidateServer = ssoValidateServer
-    this.sessionId = sessionId
+    this.cookies = cookies
     this.initDriver()
   }
 
@@ -13,7 +13,7 @@ class Crawler {
     this.driver = new webdriver.Builder()
       .withCapabilities({
         chromeOptions: {
-          args: ['--headless', '--disable-dev-shm-usage', '--disable-plugins']
+          args: ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-plugins']
         }
       })
       .forBrowser('chrome')
@@ -40,14 +40,13 @@ class Crawler {
 
   ssoIndex () {
     return this.driver.get('https://webapp.yuntech.edu.tw/workstudy/Home/Index').then(() => {
-      return this.driver.getSession()
-    }).then((session) => {
-      this.sessionId = session
+      return this.driver.manage().getCookies()
+    }).then((cookies) => {
+      this.cookies = cookies
       return this.driver
     }).then(() => {
       var loadMask = this.By.xpath('//div[@id="loading-mask"]')
       return this.driver.wait(this.until.elementsIsPresent(loadMask), 1000).then(() => {
-        console.log('Is Present')
         return this.driver.wait(this.until.elementIsNotPresent(loadMask), 3000)
       }).then(() => {
         return this.driver
@@ -115,7 +114,10 @@ class Crawler {
           return false
         })
       } else {
-        return true
+        return this.driver.manage().getCookies().then((cookies) => {
+          this.cookies = cookies
+          return true
+        })
       }
     })
   }

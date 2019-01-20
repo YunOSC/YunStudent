@@ -13,6 +13,16 @@ export default new Router({
       // component: require('@/components/LandingPage').default
     },
     {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: require('@/components/Dashboard').default
+    },
+    {
+      path: '/work-study',
+      name: 'work-study',
+      component: require('@/components/WorkStudy').default
+    },
+    {
       path: '*',
       redirect: '/'
     }

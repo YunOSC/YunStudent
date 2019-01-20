@@ -2,34 +2,53 @@
   <div>
     <div>
       <label>Account:</label>
-      <input v-model="account" type="text" class="form-control"/>
+      <input v-model="loginData.account" type="text" class="form-control" placehoder="StudentID"/>
     </div>
     <div>
       <label>Password:</label>
-      <input v-model="password" type="password" class="form-control"/>
+      <input v-model="loginData.password" type="password" class="form-control"/>
     </div>
-    <input @click="login(account, password)" type="submit"  class="btn btn-primary"/>
+    <input @click="login()" type="submit"  class="btn btn-primary" placehoder="Password"/>
   </div>
 </template>
 
 <script>
-import Vue from 'vue'
+import router from '../router'
 
 export default {
   name: 'login',
   data: () => {
     return {
-      account: '',
-      password: ''
+      loginData: {
+        account: '',
+        password: ''
+      }
     }
   },
+  created: function () {
+    this.$saves.readSavesAsync().then((saves) => {
+      this.loginData = saves.data.login
+      if (this.loginData.account !== '' && this.loginData.password !== '') {
+        this.login()
+      }
+    })
+  },
   methods: {
-    login: (account, password) => {
+    login: function () {
+      let account = this.loginData.account
+      let password = this.loginData.password
+
       if (account.length < 7 || password.length < 4) {
-        Vue.prototype.$toasted.show('length not enough')
+        this.$toasted.show('length not enough')
       } else {
-        Vue.prototype.$crawler.ssoLogin(account, password).then((result) => {
-          console.log(result)
+        this.$crawler.ssoLogin(account, password).then((result) => {
+          if (result) {
+            this.$saves.data.login = this.loginData
+            this.$saves.writeSaves()
+            router.push({'name': 'dashboard'})
+          } else {
+            this.$toasted.show('Login failed')
+          }
         })
       }
     }

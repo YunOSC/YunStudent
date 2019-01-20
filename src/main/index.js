@@ -15,6 +15,15 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
+function killAllChromeDriver () {
+  let find = require('find-process')
+  return find('name', 'chromedriver').then((list) => {
+    list.forEach((p) => {
+      process.kill(p.pid)
+    })
+  })
+}
+
 function createWindow () {
   /**
    * Initial window options
@@ -28,7 +37,9 @@ function createWindow () {
   mainWindow.loadURL(winURL)
 
   mainWindow.on('closed', () => {
-    mainWindow = null
+    killAllChromeDriver().then(() => {
+      mainWindow = null
+    })
   })
 }
 
@@ -36,12 +47,7 @@ app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    let find = require('find-process')
-    find('name', 'chromedriver').then((list) => {
-      list.forEach((p) => {
-        process.kill(p.pid)
-      })
-    }).then(() => {
+    killAllChromeDriver().then(() => {
       app.quit()
     })
   }
