@@ -1,20 +1,26 @@
 <template>
   <div>
-    <div>
-      <label>Account:</label>
-      <input v-model="loginData.account" type="text" class="form-control" placehoder="StudentID"/>
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <a class="navbar-brand" href="/">YunStudent</a> 
+    </nav>
+    <div class="container">
+      <div class="col-sm-6 offset-sm-3">
+        <div class="form-group">
+          <label>Account:</label>
+          <input v-model="loginData.account" type="text" class="form-control" placeholder="StudentID"/>
+        </div>
+        <div class="form-group">
+          <label>Password:</label>
+          <input v-model="loginData.password" type="password" class="form-control" placeholder="Password"/>
+        </div>
+        <input @click="login" type="submit" class="btn btn-sm btn-primary" value="Submit"/>
+        <input @click="clear" type="reset" class="btn btn-sm btn-info" value="Clear"/>
+      </div>
     </div>
-    <div>
-      <label>Password:</label>
-      <input v-model="loginData.password" type="password" class="form-control"/>
-    </div>
-    <input @click="login()" type="submit"  class="btn btn-primary" placehoder="Password"/>
   </div>
 </template>
 
 <script>
-import router from '../router'
-
 export default {
   name: 'login',
   data: () => {
@@ -41,16 +47,23 @@ export default {
       if (account.length < 7 || password.length < 4) {
         this.$toasted.show('length not enough')
       } else {
-        this.$crawler.ssoLogin(account, password).then((result) => {
+        this.$saves.login = this.loginData
+        this.$crawler.visit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
           if (result) {
-            this.$saves.data.login = this.loginData
-            this.$saves.writeSaves()
-            router.push({'name': 'dashboard'})
+            this.$toasted.success('Login success!')
+            this.$router.push({'name': 'dashboard'})
           } else {
-            this.$toasted.show('Login failed')
+            this.$toasted.error('Login failed!')
           }
+        }).catch((err) => {
+          console.log(err)
+          this.$toasted.error('Login failed: ' + err)
         })
       }
+    },
+    clear: function () {
+      this.loginData.account = ''
+      this.loginData.password = ''
     }
   }
 }

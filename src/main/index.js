@@ -1,6 +1,7 @@
 'use strict'
 
 import { app, BrowserWindow } from 'electron'
+import { default as Crawler } from './crawler'
 
 /**
  * Set `__static` path to static files in production
@@ -15,11 +16,32 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
+function killAllChrome () {
+  let find = require('find-process')
+  return find('name', 'chrome').then((list) => {
+    return new Promise((resolve) => {
+      list.forEach((each, index, array) => {
+        if (Crawler.browserArgs.every(elem => each.cmd.split(' ').indexOf(elem) > -1)) {
+          process.kill(each.pid)
+        }
+        if (index === array.length - 1) {
+          return resolve(true)
+        }
+      })
+    })
+  })
+}
+
 function killAllChromeDriver () {
   let find = require('find-process')
   return find('name', 'chromedriver').then((list) => {
-    list.forEach((p) => {
-      process.kill(p.pid)
+    return new Promise((resolve) => {
+      list.forEach((each, index, array) => {
+        process.kill(each.pid)
+        if (index === array.length - 1) {
+          return resolve(true)
+        }
+      })
     })
   })
 }
@@ -36,11 +58,9 @@ function createWindow () {
 
   mainWindow.loadURL(winURL)
 
-  mainWindow.on('closed', () => {
-    killAllChromeDriver().then(() => {
-      mainWindow = null
-    })
-  })
+  /* mainWindow.on('closed', () => {
+    mainWindow = null
+  }) */
 }
 
 app.on('ready', createWindow)
@@ -48,6 +68,10 @@ app.on('ready', createWindow)
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     killAllChromeDriver().then(() => {
+      console.log('ChromeDriver cleaned.')
+      return killAllChrome()
+    }).then(() => {
+      console.log('Chrome cleaned.')
       app.quit()
     })
   }

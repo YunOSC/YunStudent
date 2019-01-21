@@ -17,6 +17,7 @@
       </tbody>
     </table>
     <button @click="fetchContract" class="btn btn-primary">FetchContract</button>
+    <router-link to="dashboard">Dashboard</router-link>
   </div>
 </template>
 
@@ -37,17 +38,15 @@ export default {
   methods: {
     fetchContract: function () {
       let crawler = this.$crawler
-      return crawler.driver.get('https://webapp.yuntech.edu.tw/workstudy/Stud/JobList').then(() => {
+      return crawler.visit('https://webapp.yuntech.edu.tw/workstudy/Stud/JobList').then(() => {
         let pageLocator = crawler.By.xpath('//*[@id="page-wrapper"]')
         return crawler.driver.wait(crawler.until.elementsIsPresent(pageLocator), 5000).then(() => {
-          return crawler.driver.get('https://webapp.yuntech.edu.tw/workstudy/Stud/ContractList')
+          return crawler.visit('https://webapp.yuntech.edu.tw/workstudy/Stud/ContractList')
         })
       }).then(() => {
-        let tableLocator = crawler.By.xpath('//table[@id="mainTable"]')
+        let tableLocator = crawler.By.xpath('//table[@id="mainTable"]/tbody/tr')
         return crawler.driver.wait(crawler.until.elementsIsPresent(tableLocator), 5000).then(() => {
-          return crawler.driver.findElement(tableLocator)
-            .findElement(crawler.By.tagName('tbody'))
-            .findElements(crawler.By.tagName('tr'))
+          return crawler.findElements(tableLocator)
         })
       }).then((elements) => {
         return new Promise((resolve) => {
@@ -71,7 +70,7 @@ export default {
                 'create_data': tempContract[9]
               })
               if (index === array.length - 1) {
-                resolve(contracts)
+                return resolve(contracts)
               }
             })
           })
@@ -80,6 +79,10 @@ export default {
         this.contracts = contracts
         this.$saves.data.contracts = this.contracts
         this.$saves.writeSaves()
+        this.$toasted.success('Fetch contracts success!')
+      }).catch((err) => {
+        this.$toasted.error('Fetch contracts fail!')
+        console.log(err)
       })
     }
   }

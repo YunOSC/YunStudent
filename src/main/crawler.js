@@ -2,55 +2,59 @@ const http = require('axios')
 const webdriver = require('selenium-webdriver')
 require('chromedriver')
 
+const browserArgs = ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-plugins']
+const globalError = [
+  'WebDriverError', 'NoSuchWindowError', 'TypeError'
+]
+const highLayerError = [
+  'NoSuchElementError'
+]
+
 class Crawler {
   constructor (ssoValidateServer, cookies) {
-    this.ssoValidateServer = ssoValidateServer
-    this.cookies = cookies
-    this.initDriver()
-  }
-
-  initDriver () {
-    this.driver = new webdriver.Builder()
-      .withCapabilities({
-        chromeOptions: {
-          args: ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-plugins']
-        }
-      })
-      .forBrowser('chrome')
-      .build()
-
     this.By = webdriver.By
     this.until = webdriver.until
-    this.until.elementsIsPresent = (locator) => {
-      return new webdriver.Condition('for no element to be located ' + locator, (driver) => {
-        return this.driver.findElements(locator).then((elements) => {
-          return elements.length >= 0
-        })
-      })
-    }
+    this.creating = false
+    this.created = false
 
-    this.until.elementIsNotPresent = (locator) => {
-      return new webdriver.Condition('for no element to be located ' + locator, (driver) => {
-        return this.driver.findElements(locator).then((elements) => {
-          return elements.length === 0
-        })
-      })
-    }
+    this.ssoValidateServer = ssoValidateServer
+    this.cookies = cookies
+    this.retryMaximum = 3
   }
 
-  ssoIndex () {
-    return this.driver.get('https://webapp.yuntech.edu.tw/workstudy/Home/Index').then(() => {
-      return this.driver.manage().getCookies()
-    }).then((cookies) => {
-      this.cookies = cookies
-      return this.driver
-    }).then(() => {
-      var loadMask = this.By.xpath('//div[@id="loading-mask"]')
-      return this.driver.wait(this.until.elementsIsPresent(loadMask), 1000).then(() => {
-        return this.driver.wait(this.until.elementIsNotPresent(loadMask), 3000)
-      }).then(() => {
-        return this.driver
-      })
+  initDriver (account, password) {
+    return new Promise((resolve) => {
+      this.creating = true
+      this.account = account
+      this.password = password
+
+      this.driver = new webdriver.Builder()
+        .withCapabilities({
+          chromeOptions: {
+            args: browserArgs
+          }
+        })
+        .forBrowser('chrome')
+        .build()
+
+      this.until.elementsIsPresent = (locator) => {
+        return new webdriver.Condition('for no element to be located ' + locator, () => {
+          return this.findElements(locator).then((elements) => {
+            return elements.length >= 0
+          })
+        })
+      }
+
+      this.until.elementIsNotPresent = (locator) => {
+        return new webdriver.Condition('for no element to be located ' + locator, () => {
+          return this.findElements(locator).then((elements) => {
+            return elements.length === 0
+          })
+        })
+      }
+      this.creating = false
+      this.created = !this.creating
+      return resolve()
     })
   }
 
@@ -64,61 +68,164 @@ class Crawler {
     })
   }
 
-  ssoLogin (account, password) {
-    return this.driver.get('https://webapp.yuntech.edu.tw/YunTechSSO/Account/Login').then(() => {
-      let validationCode = this.By.xpath('//img[@id="ValidationImage"]')
-      return this.driver.wait(this.until.elementsIsPresent(validationCode), 2000).then(() => {
-        return this.driver.findElement(validationCode).takeScreenshot()
-      })
-    }).then((base64Img) => {
-      return http({
-        url: this.ssoValidateServer + '/validationCode/base64',
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        data: {image: base64Img}
-      }).then((response) => {
-        return response.data
-      })
-    }).then((data) => {
-      if (data.success !== undefined) {
-        return this.driver.findElement(this.By.xpath('//*[@id="pLoginName-inputEl"]')).then((element) => {
-          element.clear()
-          return element.sendKeys(account).then(() => {
-            return this.driver.findElement(this.By.xpath('//*[@id="pLoginPassword-inputEl"]'))
+  ssoLogin (redirect, retryCounter) {
+    retryCounter = retryCounter || 0
+    console.log('login: ' + retryCounter)
+    return new Promise((resolve, reject) => {
+      return this.getCurrentUrl((url) => {
+        if (redirect === undefined || redirect == null) {
+          return this.get('https://webapp.yuntech.edu.tw/YunTechSSO/Account/Login')
+        }
+      }).then(() => {
+        // Fetch validation code from backend.
+        let validationCode = this.By.xpath('//img[@id="ValidationImage"]')
+        return this.driver.wait(this.until.elementsIsPresent(validationCode), 5000).then(() => {
+          return this.findElement(validationCode).then((element) => {
+            return element.takeScreenshot()
           })
-        }).then((element) => {
-          element.clear()
-          return element.sendKeys(password).then(() => {
-            return this.driver.findElement(this.By.xpath('//*[@id="pSecretString-inputEl"]'))
-          })
-        }).then((element) => {
-          element.clear()
-          return element.sendKeys(data.code).then(() => {
-            return this.driver.findElement(this.By.xpath('//*[@id="LoginButton-btnInnerEl"]'))
-          })
-        }).then((element) => {
-          element.click()
-          return this.driver.sleep(1000)
-        }).then(() => {
-          return this.driver.getCurrentUrl().then((url) => {
-            return url === 'https://webapp.yuntech.edu.tw/YunTechSSO/Home/Index'
+        }).then((base64Img) => {
+          return http({
+            url: this.ssoValidateServer + '/validationCode/base64',
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            data: {image: base64Img}
+          }).then((response) => {
+            return response.data.success !== undefined ? response.data : response.data
           })
         })
-      } else if (data.fail !== undefined) {
-        return false
-      }
-    }).then((result) => {
-      if (!result) {
-        return this.driver.findElement(this.By.xpath('//*[@id="button-1005-btnInnerEl"]')).then((element) => {
-          element.click()
-          return false
+      }).then((codeData) => {
+        // Fill in form datas
+        return this.findElement(this.By.xpath('//*[@id="pLoginName-inputEl"]')).then((element) => {
+          // Account
+          element.clear()
+          return element.sendKeys(this.account).then(() => {
+            return this.findElement(this.By.xpath('//*[@id="pLoginPassword-inputEl"]'))
+          })
+        }).then((element) => {
+          // Password
+          element.clear()
+          return element.sendKeys(this.password).then(() => {
+            return this.findElement(this.By.xpath('//*[@id="pSecretString-inputEl"]'))
+          })
+        }).then((element) => {
+          // Validation Code
+          element.clear()
+          return element.sendKeys(codeData.code).then(() => {
+            return this.findElement(this.By.xpath('//*[@id="LoginButton-btnInnerEl"]'))
+          })
         })
-      } else {
-        return this.driver.manage().getCookies().then((cookies) => {
-          this.cookies = cookies
+      }).then((loginBtn) => {
+        loginBtn.click()
+        return this.driver.sleep(1000).then(() => {
+          let failBtn = this.By.xpath('//*[@id="button-1005-btnInnerEl"]')
+          return this.driver.findElement(failBtn).then((element) => {
+            element.click()
+            return this.ssoLogin(redirect, retryCounter + 1)
+          }).catch(() => {
+            return resolve(true)
+          })
+        })
+      }).catch((err) => {
+        if (highLayerError.includes(err.name) && retryCounter < this.retryMaximum) {
+          return this.driver.sleep(1000).then(() => {
+            return this.ssoLogin(redirect, retryCounter + 1)
+          })
+        }
+        return reject(err)
+      })
+    })
+  }
+
+  visit (url, retryCounter) {
+    retryCounter = retryCounter || 0
+    console.log('visit: ' + retryCounter)
+    return new Promise((resolve, reject) => {
+      return this.get(url).then(() => {
+        return this.getCurrentUrl().then((currentUrl) => {
+          return url === currentUrl
+        })
+      }).then((result) => {
+        if (result) {
           return true
+        } else {
+          return this.ssoLogin(url)
+        }
+      }).then((loginResult) => {
+        if (loginResult) {
+          return this.driver.wait(this.until.urlIs(url), 5000).then(() => {
+            return resolve(true)
+          }).catch(() => {
+            return resolve(false)
+          })
+        } else {
+          return resolve(false)
+        }
+      }).catch((err) => {
+        if (globalError.includes(err.name) && retryCounter < this.retryMaximum) {
+          return this.initDriver(this.account, this.password).then(() => {
+            return this.driver.sleep(1000)
+          }).then(() => {
+            return this.visit(url, retryCounter + 1)
+          })
+        }
+        return reject(err)
+      })
+    })
+  }
+
+  get (url, retryCounter) {
+    retryCounter = retryCounter || 0
+    /*
+    if (this.driver === undefined || this.driver == null) {
+      return this.initDriver(this.account, this.password).then(() => {
+        return this.get(url)
+      })
+    } else {
+    */
+    return this.driver.get(url).catch((err) => {
+      if (globalError.includes(err.name) && retryCounter < this.retryMaximum) {
+        return this.initDriver(this.account, this.password).then(() => {
+          return this.get(url, retryCounter + 1)
         })
       }
+      throw err
+    })
+    // }
+  }
+
+  getCurrentUrl (retryCounter) {
+    retryCounter = retryCounter || 0
+    return this.driver.getCurrentUrl().catch((err) => {
+      if (globalError.includes(err.name) && retryCounter < this.retryMaximum) {
+        return this.initDriver(this.account, this.password).then(() => {
+          return this.getCurrentUrl(retryCounter + 1)
+        })
+      }
+      throw err
+    })
+  }
+
+  findElement (locator, retryCounter) {
+    retryCounter = retryCounter || 0
+    return this.driver.findElement(locator).catch((err) => {
+      if (globalError.includes(err.name) && retryCounter < this.retryMaximum) {
+        return this.initDriver(this.account, this.password).then(() => {
+          return this.findElement(locator, retryCounter + 1)
+        })
+      }
+      throw err
+    })
+  }
+
+  findElements (locator, retryCounter) {
+    retryCounter = retryCounter || 0
+    return this.driver.findElements(locator).catch((err) => {
+      if (globalError.includes(err.name) && retryCounter < this.retryMaximum) {
+        return this.initDriver(this.account, this.password).then(() => {
+          return this.findElements(locator, retryCounter + 1)
+        })
+      }
+      throw err
     })
   }
 
@@ -130,5 +237,7 @@ class Crawler {
     this.driver.quit()
   }
 }
+
+Crawler.browserArgs = browserArgs
 
 export default Crawler
