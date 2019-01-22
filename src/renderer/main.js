@@ -1,13 +1,14 @@
 import Vue from 'vue'
-import axios from 'axios'
-
 import App from './App'
 import router from './router'
+
 import store from './store'
+import axios from 'axios'
 import Crawler from '../main/crawler'
 import Saves from '../main/saves'
 
 import Toasted from 'vue-toasted'
+import VModal from 'vue-js-modal'
 import 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.css'
 
@@ -18,6 +19,8 @@ Vue.use(Toasted, {
   theme: 'bubble',
   iconPack: 'fontawesome'
 })
+
+Vue.use(VModal)
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.ssoValidateServer = Vue.prototype.$ssoValidateServer = 'http://sso-validate.clo5de.info:5000'

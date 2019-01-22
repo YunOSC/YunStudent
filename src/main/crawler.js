@@ -2,7 +2,7 @@ const http = require('axios')
 const webdriver = require('selenium-webdriver')
 require('chromedriver')
 
-const browserArgs = ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-plugins']
+const browserArgs = ['--start-maximized', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-plugins']
 const globalError = [
   'WebDriverError', 'NoSuchWindowError', 'TypeError'
 ]

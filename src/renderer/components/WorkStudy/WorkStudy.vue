@@ -1,5 +1,6 @@
 <template>
   <div>
+    <modify-task/>
     <table class="table table-striped">
       <thead>
         <tr>
@@ -16,14 +17,17 @@
         </tr>
       </tbody>
     </table>
-    <button @click="fetchContract" class="btn btn-primary">FetchContract</button>
-    <router-link to="dashboard">Dashboard</router-link>
+    <button @click="fetchContract" class="btn btn-sm btn-primary">FetchContract</button>
+    <button @click="$modal.show('modify-task')" class="btn btn-sm btn-primary">Modify Task</button>
+    <router-link to="dashboard" class="btn btn-sm btn-primary">Dashboard</router-link>
   </div>
 </template>
 
 <script>
+import ModifyTask from './ModifyTask'
 export default {
   name: 'workd-study',
+  components: { ModifyTask },
   data: function () {
     return {
       contracts: []

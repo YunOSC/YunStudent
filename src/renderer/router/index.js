@@ -20,7 +20,7 @@ export default new Router({
     {
       path: '/work-study',
       name: 'work-study',
-      component: require('@/components/WorkStudy').default
+      component: require('@/components/WorkStudy/WorkStudy').default
     },
     {
       path: '*',
