@@ -14,7 +14,7 @@ export default {
   name: 'dashboard',
   components: { WorkStudy },
   mounted: function () {
-    this.$crawler.visit('https://webapp.yuntech.edu.tw/YunTechSSO/')
+    this.$crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/')
   },
   methods: {
     logout: function () {

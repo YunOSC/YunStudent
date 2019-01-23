@@ -17,19 +17,7 @@ export default {
   components: { InfoSummary, ModifyTask },
   methods: {
     addWorkDiary: function () {
-      this.$crawler.visit('https://webapp.yuntech.edu.tw/workstudy/StudWorkRecord/Create').catch((err) => {
-        if (err.name.includes('UnexpectedAlertOpenError')) {
-          return this.$crawler.driver.switchTo().alert().then((alert) => {
-            return alert.getText().then((text) => {
-              if (text.includes('自107年1月起，請務必於 7日內登錄工作日誌，逾期即無法補登。')) {
-                return alert.accept()
-              }
-            })
-          })
-        }
-      }).then(() => {
-        console.log('Pass alert!')
-      })
+      this.$crawler.ssoAddWorkDiary()
     }
   }
 }

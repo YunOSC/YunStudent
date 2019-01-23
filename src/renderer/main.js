@@ -4,7 +4,7 @@ import router from './router'
 
 import store from './store'
 import axios from 'axios'
-import Crawler from '../main/crawler'
+import Crawler from '../main/crawler/index'
 import { ipcRenderer } from 'electron'
 
 import Toasted from 'vue-toasted'

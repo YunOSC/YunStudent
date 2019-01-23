@@ -1,8 +1,9 @@
 'use strict'
 
 import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } from 'electron'
-import { default as Crawler } from './crawler'
-import { default as Saves } from './saves'
+import Crawler from './crawler/index'
+import Saves from './saves'
+import MainIpc from './ipc/main'
 
 /**
  * Set `__static` path to static files in production
@@ -14,17 +15,21 @@ if (process.env.NODE_ENV !== 'development') {
 
 let mainWindow
 let tray
+let mainIpc
+
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
+const ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
 const saves = new Saves()
+const crawler = new Crawler(ssoValidateServer, {})
 
 function killAllChrome () {
   let find = require('find-process')
   return find('name', 'chrome').then((list) => {
     return new Promise((resolve) => {
       list.forEach((each, index, array) => {
-        if (Crawler.browserArgs.every(elem => each.cmd.split(' ').indexOf(elem) > -1)) {
+        if (crawler.browserArgs.every(elem => each.cmd.split(' ').indexOf(elem) > -1)) {
           process.kill(each.pid)
         }
         if (index === array.length - 1) {
@@ -70,18 +75,12 @@ function createWindow () {
   }) */
 
   createTray()
-  saves.readSavesAsync()
+  mainIpc = new MainIpc(ipcMain, mainWindow, saves)
+  saves.readSavesAsync().then((instance) => {
+    crawler.initDriver(instance.login.account, instance.login.password)
+  })
+  console.log(mainIpc !== undefined)
 }
-
-ipcMain.on('renderer-created', (event, data) => {
-  mainWindow.webContents.send('send-saves', saves.data)
-})
-
-ipcMain.on('renderer-req-write-saves', (event, data) => {
-  saves.data = data
-  saves.writeSaves()
-  mainWindow.webContents.send('update-saves', saves.data)
-})
 
 function createTray () {
   const iconPath = require('path').join(__dirname, '../../static/icons/icon.ico')

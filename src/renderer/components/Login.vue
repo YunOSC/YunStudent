@@ -54,7 +54,7 @@ export default {
         this.$toasted.show('length not enough')
       } else {
         this.$root.saves.login = this.loginData
-        this.$crawler.visit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
+        this.$crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
           if (result) {
             this.$toasted.success('Login success!')
             this.$router.push({'name': 'dashboard'})
