@@ -5,7 +5,7 @@ import router from './router'
 import store from './store'
 import axios from 'axios'
 import Crawler from '../main/crawler'
-import Saves from '../main/saves'
+import { ipcRenderer } from 'electron'
 
 import Toasted from 'vue-toasted'
 import VModal from 'vue-js-modal'
@@ -25,26 +25,39 @@ Vue.use(VModal)
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.ssoValidateServer = Vue.prototype.$ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
 Vue.http = Vue.prototype.$http = axios
+Vue.mainIpc = Vue.prototype.$mainIpc = ipcRenderer
 Vue.crawler = Vue.prototype.$crawler = new Crawler(Vue.ssoValidateServer, {})
-Vue.saves = Vue.prototype.$saves = new Saves()
 Vue.config.productionTip = false
-
-Vue.initCrawler = Vue.prototype.$initCrawler = function () {
-  return this.$saves.readSavesAsync().then((saves) => {
-    let loginData = saves.data.login
-    return this.$crawler.initDriver(loginData.account, loginData.password)
-  })
-}
 
 Vue.component('navigator', Navigator)
 
 /* eslint-disable no-new */
-new Vue({
+const vue = new Vue({
   components: { App },
   router,
   store,
+  data () {
+    return {
+      saves: {}
+    }
+  },
+  methods: {
+    writeToSaves () {
+      this.$mainIpc.send('renderer-req-write-saves', this.saves)
+    }
+  },
   template: '<App/>',
-  beforeCreate: function () {
-    this.$initCrawler()
+  created: function () {
+    this.$mainIpc.send('renderer-created')
   }
 }).$mount('#app')
+
+Vue.mainIpc.on('send-saves', (event, data) => {
+  vue.$data.saves = data
+  let loginData = vue.$data.saves.login
+  vue.$crawler.initDriver(loginData.account, loginData.password)
+})
+
+Vue.mainIpc.on('update-saves', (event, data) => {
+  vue.$data.saves = data
+})

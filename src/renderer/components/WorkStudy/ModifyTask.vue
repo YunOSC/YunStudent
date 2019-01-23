@@ -36,7 +36,7 @@
             <label class="col-3">Available Contract</label>
             <select v-model="selected.contract" class="form-control col">
               <option v-for="(each, index) in availableContracts" :key="index" :value="each">
-                {{ each.name }}
+                {{ each }}
               </option>
             </select>
           </div>
@@ -100,6 +100,7 @@ export default {
   data () {
     return {
       tasks: [],
+      contracts: [],
       availableContracts: [],
       editing: -1,
       selected: {
@@ -126,17 +127,28 @@ export default {
       }
     }
   },
+  watch: {
+    '$root.saves' (value) {
+      this.tasks = value.tasks
+      this.contracts = value.contracts
+      this.getAvaliableContracts()
+      if (this.tasks === []) {
+        this.$toasted.info('No tasks founded!')
+      }
+    }
+  },
   mounted () {
-    this.tasks = this.$saves.data.tasks || []
-    this.availableContracts = this.getAvaliableContracts()
+    this.tasks = this.$root.saves.tasks || this.tasks
+    this.contracts = this.$root.saves.contracts || this.contracts
+    this.getAvaliableContracts()
     if (this.tasks === []) {
       this.$toasted.info('No tasks founded!')
     }
   },
   methods: {
     savesAllTasks () {
-      this.$saves.data.tasks = this.tasks
-      this.$saves.writeSaves()
+      this.$root.saves.tasks = this.tasks
+      this.$root.writeToSaves()
     },
     resetSelected () {
       this.selected = {
@@ -166,16 +178,9 @@ export default {
       let today = new Date()
       let allContracts = []
 
-      this.$saves.data.contracts.forEach((each) => {
+      this.contracts.forEach((each) => {
         if (today <= new Date(each.end_date)) {
-          allContracts.push(each)
-        }
-      })
-
-      this.tasks.forEach((each) => {
-        let search = allContracts.indexOf(each.contract)
-        if (search !== -1) {
-          allContracts.splice(search, 1)
+          allContracts.push(each.name)
         }
       })
       this.availableContracts = allContracts
@@ -188,7 +193,7 @@ export default {
       this.selected.weeks[index] = !this.selected.weeks[index]
     },
     taskValidate (task) {
-      task = task || this.selected
+      task = this.selected || task
       let start = parseInt(task.startTime.hour) * 60 + parseInt(task.startTime.minute)
       let end = parseInt(task.endTime.hour) * 60 + parseInt(task.endTime.minute)
       if (start >= end) {
@@ -220,8 +225,6 @@ export default {
     },
     cancelEditTask () {
       this.editing = -1
-      let search = this.availableContracts.indexOf(this.selected.contract)
-      this.availableContracts.splice(search, 1)
       this.resetSelected()
     },
     removeTask (element) {
@@ -235,7 +238,6 @@ export default {
     editTask (element, index) {
       this.editing = index
       this.selected = element
-      this.availableContracts.push(element.contract)
     }
   }
 }

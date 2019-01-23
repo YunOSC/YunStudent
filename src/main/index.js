@@ -1,7 +1,8 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } from 'electron'
 import { default as Crawler } from './crawler'
+import { default as Saves } from './saves'
 
 /**
  * Set `__static` path to static files in production
@@ -12,9 +13,11 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow
+let tray
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
+const saves = new Saves()
 
 function killAllChrome () {
   let find = require('find-process')
@@ -58,9 +61,50 @@ function createWindow () {
 
   mainWindow.loadURL(winURL)
 
+  mainWindow.on('minimize', () => {
+    mainWindow.hide()
+  })
+
   /* mainWindow.on('closed', () => {
     mainWindow = null
   }) */
+
+  createTray()
+  saves.readSavesAsync()
+}
+
+ipcMain.on('renderer-created', (event, data) => {
+  mainWindow.webContents.send('send-saves', saves.data)
+})
+
+ipcMain.on('renderer-req-write-saves', (event, data) => {
+  saves.data = data
+  saves.writeSaves()
+  mainWindow.webContents.send('update-saves', saves.data)
+})
+
+function createTray () {
+  const iconPath = require('path').join(__dirname, '../../static/icons/icon.ico')
+  const img = nativeImage.createFromPath(iconPath)
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'YunStudent',
+      click () {
+        mainWindow.show()
+      }
+    },
+    {
+      label: 'Quit',
+      click () {
+        mainWindow.removeAllListeners('close')
+        mainWindow.close()
+      }
+    }
+  ])
+
+  tray = new Tray(img)
+  tray.setToolTip('YunStudent')
+  tray.setContextMenu(contextMenu)
 }
 
 app.on('ready', createWindow)

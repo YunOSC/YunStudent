@@ -18,7 +18,7 @@ export default {
   },
   methods: {
     logout: function () {
-      this.$saves.writeSaves()
+      this.$root.writeToSaves()
       this.$router.push({'name': 'login'})
     }
   }

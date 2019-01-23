@@ -23,7 +23,7 @@
 <script>
 export default {
   name: 'login',
-  data: () => {
+  data () {
     return {
       loginData: {
         account: '',
@@ -31,13 +31,19 @@ export default {
       }
     }
   },
-  created: function () {
-    this.$saves.readSavesAsync().then((saves) => {
-      this.loginData = saves.data.login
+  watch: {
+    '$root.saves' (value) {
+      this.loginData = value.login
       if (this.loginData.account !== '' && this.loginData.password !== '') {
         this.login()
       }
-    })
+    }
+  },
+  mounted: function () {
+    this.loginData = this.$root.saves.login || this.loginData
+    if (this.loginData.account !== '' && this.loginData.password !== '') {
+      this.login()
+    }
   },
   methods: {
     login: function () {
@@ -47,7 +53,7 @@ export default {
       if (account.length < 7 || password.length < 4) {
         this.$toasted.show('length not enough')
       } else {
-        this.$saves.login = this.loginData
+        this.$root.saves.login = this.loginData
         this.$crawler.visit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
           if (result) {
             this.$toasted.success('Login success!')
