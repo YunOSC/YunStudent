@@ -68,9 +68,9 @@ class Crawler {
     })
   }
 
-  ssoLogin (redirect, retryCounter) {
+  ssoLogin (redirect, retryCounter, visitRetryCounter) {
     retryCounter = retryCounter || 0
-    console.log('login: ' + retryCounter)
+    console.log('login: ' + retryCounter + ' visit: ' + visitRetryCounter)
     return new Promise((resolve, reject) => {
       return this.getCurrentUrl((url) => {
         if (redirect === undefined || redirect == null) {
@@ -122,13 +122,23 @@ class Crawler {
             element.click()
             return this.ssoLogin(redirect, retryCounter + 1)
           }).catch(() => {
-            return resolve(true)
+            return this.getCurrentUrl()
           })
         })
+      }).then((url) => {
+        if (url === redirect) {
+          return resolve(true)
+        } else {
+          return this.get(redirect).then(() => {
+            return resolve(true)
+          })
+        }
       }).catch((err) => {
-        if (highLayerError.includes(err.name) && retryCounter < this.retryMaximum) {
+        if (retryCounter < this.retryMaximum && highLayerError.includes(err.name)) {
           return this.driver.sleep(1000).then(() => {
-            return this.ssoLogin(redirect, retryCounter + 1)
+            return this.ssoLogin(redirect, retryCounter + 1, visitRetryCounter).catch((err) => {
+              return reject(err)
+            })
           })
         }
         return reject(err)
@@ -140,15 +150,15 @@ class Crawler {
     retryCounter = retryCounter || 0
     console.log('visit: ' + retryCounter)
     return new Promise((resolve, reject) => {
-      return this.get(url).then(() => {
-        return this.getCurrentUrl().then((currentUrl) => {
-          return url === currentUrl
-        })
+      return this.getCurrentUrl().then((currentUrl) => {
+        return url === currentUrl
       }).then((result) => {
         if (result) {
-          return true
+          return resolve(true)
         } else {
-          return this.ssoLogin(url)
+          return this.get(url).then(() => {
+            return this.ssoLogin(url, undefined, retryCounter)
+          })
         }
       }).then((loginResult) => {
         if (loginResult) {
@@ -161,12 +171,22 @@ class Crawler {
           return resolve(false)
         }
       }).catch((err) => {
-        if (globalError.includes(err.name) && retryCounter < this.retryMaximum) {
-          return this.initDriver(this.account, this.password).then(() => {
-            return this.driver.sleep(1000)
-          }).then(() => {
-            return this.visit(url, retryCounter + 1)
-          })
+        if (retryCounter < this.retryMaximum) {
+          if (globalError.includes(err.name)) {
+            return this.initDriver(this.account, this.password).then(() => {
+              return this.driver.sleep(1000)
+            }).then(() => {
+              return this.visit(url, retryCounter + 1)
+            }).catch((err) => {
+              // Extract the inner reject.
+              return reject(err)
+            })
+          } else {
+            return this.visit(url, retryCounter + 1).catch((err) => {
+              // Extract the inner reject.
+              return reject(err)
+            })
+          }
         }
         return reject(err)
       })

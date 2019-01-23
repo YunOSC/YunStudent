@@ -1,14 +1,18 @@
 <template>
-  <div>
+  <div class="container">
     <h1>Dashboard</h1>
-    <router-link to="work-study">WorkStudy</router-link>
     <a @click="logout">Logout</a>
+    <div class="col-6"><work-study/></div>
+    <div class="col-6"></div>
   </div>
 </template>
 
 <script>
+import WorkStudy from '@/components/WorkStudy/WorkStudy'
+
 export default {
   name: 'dashboard',
+  components: { WorkStudy },
   mounted: function () {
     this.$crawler.visit('https://webapp.yuntech.edu.tw/YunTechSSO/')
   },

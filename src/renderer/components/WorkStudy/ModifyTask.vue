@@ -33,16 +33,16 @@
         </table>
         <form class="form-horizontal">
           <div class="form-group row">
-            <label class="col-sm-3">Available Contract</label>
-            <select v-model="selected.contract" class="form-control col-sm">
+            <label class="col-3">Available Contract</label>
+            <select v-model="selected.contract" class="form-control col">
               <option v-for="(each, index) in availableContracts" :key="index" :value="each">
                 {{ each.name }}
               </option>
             </select>
           </div>
           <div class="form-group row">
-            <label class="col-sm-3">Select Week</label>
-            <div class="col-sm row">
+            <label class="col-3">Select Week</label>
+            <div class="col row">
               <div v-for="(each, index) in this.selected.weeks" :key="index">
                 <button class="btn btn-sm btn-primary" v-bind:class="{ disabled: each }" @click="setWeek(index)">
                   {{ getWeekName(index) }}
@@ -51,28 +51,34 @@
             </div>
           </div>
           <div class="form-group row">
-            <label class="col-sm-3">Start time</label>
-            <select v-model="selected.startTime.hour" class="form-control col-sm-3">
+            <label class="col-3">Start time</label>
+            <select v-model="selected.startTime.hour" class="form-control col-3">
               <option v-for="index in 24" :key="index">{{ index - 1 }}</option>
             </select>
-            <label class="col-sm-1">:</label>
-            <select v-model="selected.startTime.minute" class="form-control col-sm-3">
+            <label class="col-1">:</label>
+            <select v-model="selected.startTime.minute" class="form-control col-3">
               <option v-for="index in 60" :key="index">{{ index - 1 }}</option>
             </select>
           </div>
           <div class="form-group row">
-            <label class="col-sm-3">End time</label>
-            <select v-model="selected.endTime.hour" class="form-control col-sm-3">
+            <label class="col-3">End time</label>
+            <select v-model="selected.endTime.hour" class="form-control col-3">
               <option v-for="index in 24" :key="index">{{ index - 1 }}</option>
             </select>
-            <label class="col-sm-1">:</label>
-            <select v-model="selected.endTime.minute" class="form-control col-sm-3">
+            <label class="col-1">:</label>
+            <select v-model="selected.endTime.minute" class="form-control col-3">
               <option v-for="index in 60" :key="index">{{ index - 1 }}</option>
             </select>
           </div>
           <div class="form-group row">
-            <label class="col-sm-3">Description</label>
-            <input v-model="selected.description" class="form-control col-sm" type="text"/>
+            <label class="col-3">Offset</label>
+            <input v-model="selected.offset" class="form-contorl" type="checkbox"/>
+            <small>This option will let system filling diaries with randomly range(in 10 minutes).</small>
+            <small>For example: Start time is 16:30, final diary may fill with 16:20 ~ 16:30 randomly.</small>
+          </div>
+          <div class="form-group row">
+            <label class="col-3">Description</label>
+            <input v-model="selected.description" class="form-control col" type="text"/>
           </div>
           <div v-if="editing !== -1" class="form-group">
             <input @click="confirmEditTask" type="submit" class="btn btn-sm btn-primary" value="Edit"/>
@@ -115,6 +121,7 @@ export default {
           hour: 0,
           minute: 0
         },
+        offset: false,
         description: ''
       }
     }
@@ -186,6 +193,11 @@ export default {
       let end = parseInt(task.endTime.hour) * 60 + parseInt(task.endTime.minute)
       if (start >= end) {
         this.$toasted.error('Wrong start time or end time, end time should greater than start.')
+      } else if ((end - start) > 240) {
+        this.$toasted.error('One record\'s start and end time can not over 4 hours.')
+      } else if (task.startTime.hour <= 6 || task.startTime.hour >= 22 || task.endTime.hour <= 6 || task.endTime.hour >= 22) {
+        this.$toasted.info('Only male can work b/w 22:00 - 06:00, Make sure you are a male.')
+        return true
       } else if (task.description === '') {
         this.$toasted.error('Missing decription.')
       } else {
@@ -228,9 +240,3 @@ export default {
   }
 }
 </script>
-
-<style scope>
-  .tb-font-14 {
-    font-size: 14px;
-  }
-</style>

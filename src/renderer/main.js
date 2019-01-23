@@ -15,7 +15,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import Navigator from '@/components/Navigator'
 
 Vue.use(Toasted, {
-  duration: 2000,
+  duration: 8000,
   theme: 'bubble',
   iconPack: 'fontawesome'
 })

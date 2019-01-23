@@ -18,11 +18,6 @@ export default new Router({
       component: require('@/components/Dashboard').default
     },
     {
-      path: '/work-study',
-      name: 'work-study',
-      component: require('@/components/WorkStudy/WorkStudy').default
-    },
-    {
       path: '*',
       redirect: '/'
     }
