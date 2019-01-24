@@ -1,5 +1,5 @@
 # YunStudent
-
+[![Build Status](https://travis-ci.com/jackey8616/YunStudent.svg?branch=master)](https://travis-ci.com/jackey8616/YunStudent) [![Build status](https://ci.appveyor.com/api/projects/status/07tbwnb1oaryugoy?svg=true)](https://ci.appveyor.com/project/jackey8616/yunstudent)
 > An electron-vue project
 
 #### Build Setup

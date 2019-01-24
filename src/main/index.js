@@ -13,9 +13,8 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow
-let tray
-let mainIpc
+let mainWindow, tray, mainIpc
+const notifier = require('node-notifier')
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -80,7 +79,7 @@ function createWindow () {
     return crawler.initDriver(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)
-    mainIpc = new MainIpc(ipcMain, mainWindow, saves, crawler)
+    mainIpc = new MainIpc(ipcMain, sendNotify, mainWindow, saves, crawler)
     console.log('MainIPC init status: ' + (mainIpc !== undefined))
   })
 }
@@ -107,6 +106,15 @@ function createTray () {
   tray = new Tray(img)
   tray.setToolTip('YunStudent')
   tray.setContextMenu(contextMenu)
+}
+
+function sendNotify (message, sound, title) {
+  notifier.notify({
+    title: title || 'YunStudent',
+    message: message,
+    icon: require('path').join(__static, '/icons/icon.ico'),
+    sound: sound || true
+  })
 }
 
 app.on('ready', createWindow)

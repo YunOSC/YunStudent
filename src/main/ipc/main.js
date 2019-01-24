@@ -1,6 +1,7 @@
 class MainIpc {
-  constructor (ipc, window, saves, crawler) {
+  constructor (ipc, notifier, window, saves, crawler) {
     this.ipc = ipc
+    this.notifier = notifier
     this.window = window
     this.saves = saves
     this.crawler = crawler
@@ -13,6 +14,16 @@ class MainIpc {
     this.ipc.on('req-navigate-url', (event, data) => this.reqNavigateUrl(event, data))
     this.ipc.on('req-crawl-available-contracts', (event, data) => this.reqCrawlAvailableContracts(event, data))
     this.ipc.on('req-crawl-year-schedules', (event, data) => this.reqCrawlYearSchedules(event, data))
+  }
+
+  finalRtnNotify (resKey, result) {
+    this.window.webContents.send(resKey, result)
+    if (!this.window.isVisible()) {
+      this.notifier(result)
+    }
+    if (result.success === undefined) {
+      console.log(result)
+    }
   }
 
   rendererCreated (event, data) {
@@ -43,15 +54,16 @@ class MainIpc {
       if (result) {
         this.saves.data.login = data
         this.saves.writeSaves()
-        this.window.webContents.send('res-login', {'success': true})
+        return {'success': true}
       } else {
-        this.window.webContents.send('res-login', {'fail': true, 'reason': 'Unknwon'})
+        return {'fail': true, 'reason': 'Unknwon'}
       }
     }).catch((err) => {
       this.crawler.account = tempLogin.account
       this.crawler.password = tempLogin.password
-      this.window.webContents.send('res-login', {'fail': true, 'reason': err})
-      console.log(err)
+      return {'fail': true, 'reason': err}
+    }).then((finalRtn) => {
+      this.finalRtnNotify('res-login', finalRtn)
     })
   }
 
@@ -64,13 +76,14 @@ class MainIpc {
   reqNavigateUrl (event, data) {
     this.crawler.ssoVisit(data.url).then((result) => {
       if (result) {
-        this.window.webContents.send('res-navigate-url', {'success': true})
+        return {'success': true}
       } else {
-        this.window.webContents.send('res-navigate-url', {'fail': true, 'reason': 'Unknown'})
+        return {'fail': true, 'reason': 'Unknown'}
       }
     }).catch((err) => {
-      this.window.webContents.send('res-navigate-url', {'fail': true, 'reason': err})
-      console.log(err)
+      return {'fail': true, 'reason': err}
+    }).then((finalRtn) => {
+      this.finalRtnNotify('res-navigate-url', finalRtn)
     })
   }
 
@@ -78,15 +91,16 @@ class MainIpc {
     this.crawler.ssoFetchContracts().then((contracts) => {
       this.saves.data.contracts = contracts
       this.saves.writeSaves()
-      this.window.webContents.send('res-crawl-available-contracts', {
+      return {
         'success': true,
         'data': {
           'contracts': contracts
         }
-      })
+      }
     }).catch((err) => {
-      this.window.webContents.send('res-crawl-available-contracts', {'fail': true, 'reason': err})
-      console.log(err)
+      return {'fail': true, 'reason': err}
+    }).then((finalRtn) => {
+      this.finalRtnNotify('res-crawl-available-contracts', finalRtn)
     })
   }
 
@@ -94,15 +108,16 @@ class MainIpc {
     this.crawler.ssoFetchYearSchedules().then((schedules) => {
       this.saves.data.schedules = schedules
       this.saves.writeSaves()
-      this.window.webContents.send('res-crawl-year-schedules', {
+      return {
         'success': true,
         'data': {
           'schedules': schedules
         }
-      })
+      }
     }).catch((err) => {
-      this.window.webContents.send('res-crawl-year-schedules', {'fail': true, 'reason': err})
-      console.log(err)
+      return {'fail': true, 'reason': err}
+    }).then((finalRtn) => {
+      this.finalRtnNotify('res-crawl-year-schedules', finalRtn)
     })
   }
 }
