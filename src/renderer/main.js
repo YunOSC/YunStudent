@@ -8,6 +8,7 @@ import { ipcRenderer } from 'electron'
 import {
   sendSaves, updateSaves, resLogin, resLogout, resNavigateUrl,
   resCrawlAvailableContracts, resCrawlYearSchedules } from '../main/ipc/renderer'
+import I18n from '../main/i18n/index'
 
 import Toasted from 'vue-toasted'
 import VModal from 'vue-js-modal'
@@ -27,6 +28,10 @@ Vue.use(VModal)
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
 Vue.mainIpc = Vue.prototype.$mainIpc = ipcRenderer
+Vue.i18n = Vue.prototype.$i18n = new I18n()
+Vue.t = Vue.prototype.$t = function (key, ...args) {
+  return Vue.i18n.t(key, args)
+}
 Vue.config.productionTip = false
 
 Vue.component('navigator', Navigator)

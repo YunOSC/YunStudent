@@ -4,10 +4,13 @@ class Saves {
   constructor (savePath) {
     this.savePath = savePath
     this.data = {
-      'login': {
-        'account': '',
-        'password': ''
-      }
+      setup: {
+        locale: 'en_US'
+      },
+      login: {},
+      contracts: [],
+      tasks: [],
+      schedules: []
     }
   }
 

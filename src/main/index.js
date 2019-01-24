@@ -1,6 +1,7 @@
 'use strict'
 
 import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } from 'electron'
+import I18n from './i18n/index'
 import Crawler from './crawler/index'
 import Saves from './saves'
 import MainIpc from './ipc/main'
@@ -14,6 +15,7 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow, tray, mainIpc
+const i18n = new I18n()
 const notifier = require('node-notifier')
 
 const winURL = process.env.NODE_ENV === 'development'
@@ -79,7 +81,7 @@ function createWindow () {
     return crawler.initDriver(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)
-    mainIpc = new MainIpc(ipcMain, sendNotify, mainWindow, saves, crawler)
+    mainIpc = new MainIpc(i18n, ipcMain, sendNotify, mainWindow, saves, crawler)
     console.log('MainIPC init status: ' + (mainIpc !== undefined))
   })
 }

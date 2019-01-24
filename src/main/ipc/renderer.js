@@ -8,10 +8,10 @@ export function updateSaves (vue, event, data) {
 
 export function resLogin (vue, event, data) {
   if (data.success !== undefined) {
-    vue.$toasted.success('Login success!')
+    vue.$toasted.success(vue.$t('TO.LoginSuccess'))
     vue.$router.push({'name': 'dashboard'})
   } else {
-    vue.$toasted.error('Login Fail: ' + (data.reason !== undefined ? data.reason : data))
+    vue.$toasted.error(vue.$t('To.LoginFail', (data.reason !== undefined ? data.reason : data)))
     console.log({'during': 'Login', 'reason': data})
   }
 }
@@ -20,9 +20,9 @@ export function resLogout (vue, event, data) {}
 
 export function resNavigateUrl (vue, event, data) {
   if (data.success !== undefined) {
-    vue.$toasted.success('URL navigate success!')
+    vue.$toasted.success(vue.$t('TO.UrlNavigateSuccess'))
   } else {
-    vue.$toasted.error('NavigateURLError: ' + (data.reason !== undefined ? data.reason : data))
+    vue.$toasted.error(vue.$t('TO.UrlNavigateFail', (data.reason !== undefined ? data.reason : data)))
     console.log({'during': 'NavigateUrl', 'reason': data})
   }
 }
@@ -30,9 +30,9 @@ export function resNavigateUrl (vue, event, data) {
 export function resCrawlAvailableContracts (vue, event, data) {
   if (data.success !== undefined) {
     vue.$data.saves.contracts = data.data.contracts
-    vue.$toasted.success('Fetch contracts success!')
+    vue.$toasted.success(vue.$t('TO.FetchContractsSuccess'))
   } else {
-    vue.$toasted.error('FetchAvailableContractsError: ' + (data.reason !== undefined ? data.reason : data))
+    vue.$toasted.error(vue.$t('TO.FetchContractsFail', (data.reason !== undefined ? data.reason : data)))
     console.log({'during': 'CrawlAvailableContracts', 'reason': data})
   }
 }
@@ -40,9 +40,9 @@ export function resCrawlAvailableContracts (vue, event, data) {
 export function resCrawlYearSchedules (vue, event, data) {
   if (data.success !== undefined) {
     vue.$data.schedules = data.data.schedules
-    vue.$toasted.success('Fetch schedules success!')
+    vue.$toasted.success(vue.$t('TO.FetchYearSchedulesSuccess'))
   } else {
-    vue.$toasted.error('FetchYearSchedulesError: ' + (data.reason !== undefined ? data.reason : data))
+    vue.$toasted.error(vue.$t('.TO.FetchYearSchedulesFail'), (data.reason !== undefined ? data.reason : data))
     console.log({'during': 'CrawlYearSchedules', 'reason': data})
   }
 }

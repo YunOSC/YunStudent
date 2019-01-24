@@ -1,5 +1,6 @@
 class MainIpc {
-  constructor (ipc, notifier, window, saves, crawler) {
+  constructor (i18n, ipc, notifier, window, saves, crawler) {
+    this.i18n = i18n
     this.ipc = ipc
     this.notifier = notifier
     this.window = window
@@ -19,10 +20,10 @@ class MainIpc {
   finalRtnNotify (resKey, result) {
     this.window.webContents.send(resKey, result)
     if (!this.window.isVisible()) {
-      this.notifier(result)
+      this.notifier(this.i18n.t(result.i18n, result.reason))
     }
     if (result.success === undefined) {
-      console.log(result)
+      console.log(this.i18n.t(result.i18n, result.reason))
     }
   }
 
@@ -54,14 +55,14 @@ class MainIpc {
       if (result) {
         this.saves.data.login = data
         this.saves.writeSaves()
-        return {'success': true}
+        return {'success': true, 'i18n': 'NO.LoginSuccess'}
       } else {
-        return {'fail': true, 'reason': 'Unknwon'}
+        return {'fail': true, 'reason': 'Unknwon', 'i18n': 'NO.LoginFail'}
       }
     }).catch((err) => {
       this.crawler.account = tempLogin.account
       this.crawler.password = tempLogin.password
-      return {'fail': true, 'reason': err}
+      return {'fail': true, 'reason': err, 'i18n': 'No.LoginFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-login', finalRtn)
     })
@@ -76,12 +77,12 @@ class MainIpc {
   reqNavigateUrl (event, data) {
     this.crawler.ssoVisit(data.url).then((result) => {
       if (result) {
-        return {'success': true}
+        return {'success': true, 'i18n': 'NO.UrlNavigateSuccess'}
       } else {
-        return {'fail': true, 'reason': 'Unknown'}
+        return {'fail': true, 'reason': 'Unknown', 'i18n': 'NO.UrlNavigateFail'}
       }
     }).catch((err) => {
-      return {'fail': true, 'reason': err}
+      return {'fail': true, 'reason': err, 'i18n': 'NO.UrlNavigateFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-navigate-url', finalRtn)
     })
@@ -95,10 +96,11 @@ class MainIpc {
         'success': true,
         'data': {
           'contracts': contracts
-        }
+        },
+        'i18n': 'NO.FetchContractsSuccess'
       }
     }).catch((err) => {
-      return {'fail': true, 'reason': err}
+      return {'fail': true, 'reason': err, 'i18n': 'NO.FetchContractsFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-crawl-available-contracts', finalRtn)
     })
@@ -112,10 +114,11 @@ class MainIpc {
         'success': true,
         'data': {
           'schedules': schedules
-        }
+        },
+        'i18n': 'NO.FetchYearSchedulesSuccess'
       }
     }).catch((err) => {
-      return {'fail': true, 'reason': err}
+      return {'fail': true, 'reason': err, 'i18n': 'NO.FetchYearSchedulesFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-crawl-year-schedules', finalRtn)
     })
