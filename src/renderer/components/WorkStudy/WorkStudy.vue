@@ -16,9 +16,7 @@ export default {
   name: 'workd-study',
   components: { InfoSummary, ModifyTask },
   methods: {
-    addWorkDiary: function () {
-      this.$crawler.ssoAddWorkDiary()
-    }
+    addWorkDiary: function () {}
   }
 }
 </script>

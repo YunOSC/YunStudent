@@ -4,8 +4,10 @@ import router from './router'
 
 import store from './store'
 import axios from 'axios'
-import Crawler from '../main/crawler/index'
 import { ipcRenderer } from 'electron'
+import {
+  sendSaves, updateSaves, resLogin, resLogout, resNavigateUrl,
+  resCrawlAvailableContracts, resCrawlYearSchedules } from '../main/ipc/renderer'
 
 import Toasted from 'vue-toasted'
 import VModal from 'vue-js-modal'
@@ -23,10 +25,8 @@ Vue.use(Toasted, {
 Vue.use(VModal)
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
-Vue.ssoValidateServer = Vue.prototype.$ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
 Vue.http = Vue.prototype.$http = axios
 Vue.mainIpc = Vue.prototype.$mainIpc = ipcRenderer
-Vue.crawler = Vue.prototype.$crawler = new Crawler(Vue.ssoValidateServer, {})
 Vue.config.productionTip = false
 
 Vue.component('navigator', Navigator)
@@ -43,7 +43,7 @@ const vue = new Vue({
   },
   methods: {
     writeToSaves () {
-      this.$mainIpc.send('renderer-req-write-saves', this.saves)
+      this.$mainIpc.send('req-write-saves', this.saves)
     }
   },
   template: '<App/>',
@@ -52,12 +52,10 @@ const vue = new Vue({
   }
 }).$mount('#app')
 
-Vue.mainIpc.on('send-saves', (event, data) => {
-  vue.$data.saves = data
-  let loginData = vue.$data.saves.login
-  vue.$crawler.initDriver(loginData.account, loginData.password)
-})
-
-Vue.mainIpc.on('update-saves', (event, data) => {
-  vue.$data.saves = data
-})
+Vue.mainIpc.on('send-saves', (event, data) => sendSaves(vue, event, data))
+Vue.mainIpc.on('update-saves', (event, data) => updateSaves(vue, event, data))
+Vue.mainIpc.on('res-login', (event, data) => resLogin(vue, event, data))
+Vue.mainIpc.on('res-logout', (event, data) => resLogout(vue, event, data))
+Vue.mainIpc.on('res-navigate-url', (event, data) => resNavigateUrl(vue, event, data))
+Vue.mainIpc.on('res-crawl-available-contracts', (event, data) => resCrawlAvailableContracts(vue, event, data))
+Vue.mainIpc.on('res-crawl-year-schedules', (event, data) => resCrawlYearSchedules(vue, event, data))

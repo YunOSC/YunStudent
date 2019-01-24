@@ -1,13 +1,13 @@
-export function fetchContract (crawler) {
-  return crawler.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/Stud/JobList').then(() => {
-    let pageLocator = crawler.By.xpath('//*[@id="page-wrapper"]')
-    return crawler.driver.wait(crawler.until.elementsIsPresent(pageLocator), 5000).then(() => {
-      return crawler.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/Stud/ContractList')
+export function fetchContracts () {
+  return this.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/Stud/JobList').then(() => {
+    let pageLocator = this.By.xpath('//*[@id="page-wrapper"]')
+    return this.driver.wait(this.until.elementsIsPresent(pageLocator), 5000).then(() => {
+      return this.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/Stud/ContractList')
     })
   }).then(() => {
-    let tableLocator = crawler.By.xpath('//table[@id="mainTable"]/tbody/tr')
-    return crawler.driver.wait(crawler.until.elementsIsPresent(tableLocator), 5000).then(() => {
-      return crawler.findElements(tableLocator)
+    let tableLocator = this.By.xpath('//table[@id="mainTable"]/tbody/tr')
+    return this.driver.wait(this.until.elementsIsPresent(tableLocator), 5000).then(() => {
+      return this.findElements(tableLocator)
     })
   }).then((elements) => {
     return new Promise((resolve) => {
@@ -36,20 +36,12 @@ export function fetchContract (crawler) {
         })
       })
     })
-  }).then((contracts) => {
-    this.contracts = contracts
-    this.$root.saves.data.contracts = this.contracts
-    this.$root.writeToSaves()
-    this.$toasted.success('Fetch contracts success!')
-  }).catch((err) => {
-    this.$toasted.error('Fetch contracts fail!')
-    console.log(err)
   })
 }
 
-export function fetchYearSchedule (crawler) {
-  return crawler.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/Stud/DayJobSchedule').then(() => {
-    return crawler.driver.getPageSource()
+export function fetchYearSchedules () {
+  return this.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/Stud/DayJobSchedule').then(() => {
+    return this.driver.getPageSource()
   }).then((source) => {
     let yearTable = source.match(/<!--\n<table[^]*<th>工作日期<\/th><th>開始時間<\/th><th>結束時間<\/th><th>工作單位<\/th><th>經辦人<\/th><th>工時\(hrs\)<\/th><th>工作地點<\/th>[^]*<\/table>\n *-->/g)[0]
     let scheduleTable = yearTable.match(/<tr>[^]*?<\/tr>/g)
@@ -73,10 +65,10 @@ export function fetchYearSchedule (crawler) {
   })
 }
 
-export function addWorkDiary (crawler) {
-  crawler.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/StudWorkRecord/Create').catch((err) => {
+export function addWorkDiary () {
+  this.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/StudWorkRecord/Create').catch((err) => {
     if (err.name.includes('UnexpectedAlertOpenError')) {
-      return crawler.driver.switchTo().alert().then((alert) => {
+      return this.driver.switchTo().alert().then((alert) => {
         return alert.getText().then((text) => {
           if (text.includes('自107年1月起，請務必於 7日內登錄工作日誌，逾期即無法補登。')) {
             return alert.accept()

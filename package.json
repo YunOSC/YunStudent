@@ -24,6 +24,7 @@
   "build": {
     "productName": "yun_student",
     "appId": "info.clo5de.yun_student",
+    "asar": false,
     "directories": {
       "output": "build"
     },

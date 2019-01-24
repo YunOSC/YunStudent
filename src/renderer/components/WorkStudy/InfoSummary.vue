@@ -40,6 +40,7 @@
       </div>
     </div>
     <a @click="fetchYearSchedule" type="button">aa</a>
+    <a @click="fetchContract" type="button">aabb</a>
   </div>
 </template>
 
@@ -78,7 +79,7 @@ export default {
   },
   methods: {
     fetchContract () {
-      this.$crawler.ssoFetchContract()
+      this.$mainIpc.send('req-crawl-available-contracts')
     },
     getAvaliableContract () {
       let today = new Date()
@@ -91,10 +92,7 @@ export default {
       this.avaliableContract = allContracts
     },
     fetchYearSchedule () {
-      let scheduleArray = this.$crawler.ssoFetchYearSchedule()
-      this.$root.saves.schedules = scheduleArray
-      this.$root.writeToSaves()
-      this.$toasted.success('Fetch Schedule success!')
+      this.$mainIpc.send('req-crawl-year-schedules')
     }
   }
 }

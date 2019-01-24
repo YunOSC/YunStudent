@@ -13,14 +13,8 @@ import WorkStudy from '@/components/WorkStudy/WorkStudy'
 export default {
   name: 'dashboard',
   components: { WorkStudy },
-  mounted: function () {
-    this.$crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/')
-  },
   methods: {
-    logout: function () {
-      this.$root.writeToSaves()
-      this.$router.push({'name': 'login'})
-    }
+    logout: function () {}
   }
 }
 </script>

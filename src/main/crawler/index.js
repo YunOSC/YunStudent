@@ -19,6 +19,12 @@ class Crawler {
     this.ssoValidateServer = ssoValidateServer
     this.cookies = cookies
     this.retryMaximum = 3
+
+    this.ssoVisit = utilsJS.visit.bind(this)
+    this.ssoLogin = loginJS.login.bind(this)
+    this.ssoFetchContracts = workStudyJS.fetchContracts.bind(this)
+    this.ssoFetchYearSchedules = workStudyJS.fetchYearSchedules.bind(this)
+    this.ssoAddWorkDiary = workStudyJS.addWorkDiary.bind(this)
   }
 
   initDriver (account, password) {
@@ -53,7 +59,7 @@ class Crawler {
       }
       this.creating = false
       this.created = !this.creating
-      return resolve()
+      return resolve(true)
     })
   }
 
@@ -65,26 +71,6 @@ class Crawler {
       src = src.replace(/\/\/ssl/g, 'https://ssl')
       return src
     })
-  }
-
-  ssoLogin (redirect, retryCounter, visitRetryCounter) {
-    return loginJS.login(this, redirect, retryCounter, visitRetryCounter)
-  }
-
-  ssoVisit (url, retryCounter) {
-    return utilsJS.visit(this, url, retryCounter)
-  }
-
-  ssoFetchContract () {
-    return workStudyJS.fetchContract(this)
-  }
-
-  ssoFetchYearSchedule () {
-    return workStudyJS.fetchYearSchedule(this)
-  }
-
-  ssoAddWorkDiary () {
-    return workStudyJS.addWorkDiary(this)
   }
 
   get (url, retryCounter) {

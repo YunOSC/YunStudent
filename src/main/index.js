@@ -21,7 +21,7 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 const ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
-const saves = new Saves()
+const saves = new Saves(require('path').join(__static, '/save.data'))
 const crawler = new Crawler(ssoValidateServer, {})
 
 function killAllChrome () {
@@ -75,15 +75,18 @@ function createWindow () {
   }) */
 
   createTray()
-  mainIpc = new MainIpc(ipcMain, mainWindow, saves)
-  saves.readSavesAsync().then((instance) => {
-    crawler.initDriver(instance.login.account, instance.login.password)
+  saves.readSavesAsync().then((result) => {
+    console.log('Saves init status: ' + result)
+    return crawler.initDriver(saves.data.login.account, saves.data.login.password)
+  }).then((result) => {
+    console.log('Crawler init status: ' + result)
+    mainIpc = new MainIpc(ipcMain, mainWindow, saves, crawler)
+    console.log('MainIPC init status: ' + (mainIpc !== undefined))
   })
-  console.log(mainIpc !== undefined)
 }
 
 function createTray () {
-  const iconPath = require('path').join(__dirname, '../../static/icons/icon.ico')
+  const iconPath = require('path').join(__static, '/icons/icon.ico')
   const img = nativeImage.createFromPath(iconPath)
   const contextMenu = Menu.buildFromTemplate([
     {

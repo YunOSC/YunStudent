@@ -53,18 +53,7 @@ export default {
       if (account.length < 7 || password.length < 4) {
         this.$toasted.show('length not enough')
       } else {
-        this.$root.saves.login = this.loginData
-        this.$crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
-          if (result) {
-            this.$toasted.success('Login success!')
-            this.$router.push({'name': 'dashboard'})
-          } else {
-            this.$toasted.error('Login failed!')
-          }
-        }).catch((err) => {
-          console.log(err)
-          this.$toasted.error('Login failed: ' + err)
-        })
+        this.$mainIpc.send('req-login', this.loginData)
       }
     },
     clear: function () {

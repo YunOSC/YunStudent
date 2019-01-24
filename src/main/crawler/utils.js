@@ -1,46 +1,44 @@
-export function visit (crawler, url, retryCounter) {
+export function visit (url, retryCounter) {
   retryCounter = retryCounter || 0
   console.log('visit: ' + retryCounter)
-  return new Promise((resolve, reject) => {
-    return crawler.getCurrentUrl().then((currentUrl) => {
-      return url === currentUrl
-    }).then((result) => {
-      if (result) {
-        return resolve(true)
+  return this.getCurrentUrl().then((currentUrl) => {
+    return url === currentUrl
+  }).then((result) => {
+    if (result) {
+      return true
+    } else {
+      return this.get(url).then(() => {
+        return this.ssoLogin(url, undefined, retryCounter)
+      })
+    }
+  }).then((loginResult) => {
+    if (loginResult) {
+      return this.driver.wait(this.until.urlIs(url), 5000).then(() => {
+        return true
+      }).catch(() => {
+        return false
+      })
+    } else {
+      return false
+    }
+  }).catch((err) => {
+    if (retryCounter < this.retryMaximum) {
+      if (this.globalError.includes(err.name)) {
+        return this.initDriver(this.account, this.password).then(() => {
+          return this.driver.sleep(1000)
+        }).then(() => {
+          return this.ssoVisit(url, retryCounter + 1)
+        }).catch((err) => {
+          // Extract the inner reject.
+          throw err
+        })
       } else {
-        return crawler.get(url).then(() => {
-          return crawler.ssoLogin(url, undefined, retryCounter)
+        return this.ssoVisit(url, retryCounter + 1).catch((err) => {
+          // Extract the inner reject.
+          throw err
         })
       }
-    }).then((loginResult) => {
-      if (loginResult) {
-        return crawler.driver.wait(crawler.until.urlIs(url), 5000).then(() => {
-          return resolve(true)
-        }).catch(() => {
-          return resolve(false)
-        })
-      } else {
-        return resolve(false)
-      }
-    }).catch((err) => {
-      if (retryCounter < crawler.retryMaximum) {
-        if (crawler.globalError.includes(err.name)) {
-          return crawler.initDriver(crawler.account, crawler.password).then(() => {
-            return crawler.driver.sleep(1000)
-          }).then(() => {
-            return crawler.ssoVisit(url, retryCounter + 1)
-          }).catch((err) => {
-            // Extract the inner reject.
-            return reject(err)
-          })
-        } else {
-          return crawler.ssoVisit(url, retryCounter + 1).catch((err) => {
-            // Extract the inner reject.
-            return reject(err)
-          })
-        }
-      }
-      return reject(err)
-    })
+    }
+    throw err
   })
 }
