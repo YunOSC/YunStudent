@@ -29,7 +29,9 @@ export function resNavigateUrl (vue, event, data) {
 
 export function resCrawlAvailableContracts (vue, event, data) {
   if (data.success !== undefined) {
-    vue.$data.saves.contracts = data.data.contracts
+    vue.$data.saves = {
+      contracts: data.data.contracts
+    }
     vue.$toasted.success(vue.$t('TO.FetchContractsSuccess'))
   } else {
     vue.$toasted.error(vue.$t('TO.FetchContractsFail', (data.reason !== undefined ? data.reason : data)))
@@ -39,7 +41,9 @@ export function resCrawlAvailableContracts (vue, event, data) {
 
 export function resCrawlYearSchedules (vue, event, data) {
   if (data.success !== undefined) {
-    vue.$data.schedules = data.data.schedules
+    vue.$data.saves = {
+      schedules: data.data.schedules
+    }
     vue.$toasted.success(vue.$t('TO.FetchYearSchedulesSuccess'))
   } else {
     vue.$toasted.error(vue.$t('.TO.FetchYearSchedulesFail'), (data.reason !== undefined ? data.reason : data))

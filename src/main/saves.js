@@ -20,8 +20,8 @@ class Saves {
         this.writeSaves()
       } else {
         this.data = JSON.parse(data)
-        return this.data
       }
+      return this.data
     })
   }
 
@@ -29,10 +29,22 @@ class Saves {
     return new Promise((resolve) => {
       fs.readFile(this.savePath, 'utf-8', (err, data) => {
         if (err) {
-          return this.writeSavesAsync()
+          return this.writeSavesAsync().then(() => {
+            return resolve(true)
+          })
         } else {
-          this.data = JSON.parse(data)
-          return resolve(true)
+          return Promise.resolve(data).then(JSON.parse).then((jsonData) => {
+            return jsonData
+          }).catch((err) => {
+            console.log(err)
+            if (err.name === 'SyntaxError') {
+              console.log('Maybe cause by empty saves.data content, ignorable.')
+            }
+            return this.data
+          }).then((jsonData) => {
+            this.data = jsonData
+            return resolve(true)
+          })
         }
       })
     })

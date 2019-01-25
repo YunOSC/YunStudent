@@ -178,11 +178,13 @@ export default {
       let today = new Date()
       let allContracts = []
 
-      this.contracts.forEach((each) => {
-        if (today <= new Date(each.end_date)) {
-          allContracts.push(each.name)
-        }
-      })
+      if (this.contracts !== undefined) {
+        this.contracts.forEach((each) => {
+          if (today <= new Date(each.end_date)) {
+            allContracts.push(each.name)
+          }
+        })
+      }
       this.availableContracts = allContracts
       return this.availableContracts
     },
