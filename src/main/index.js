@@ -81,8 +81,14 @@ function createWindow () {
     return crawler.initDriver(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)
+    return i18n.loadLocaleAsync(saves.data.setup.locale, __static)
+  }).then((result) => {
+    console.log('Language init in Locale:' + result.locale + ', Path: ' + result.localePath)
     mainIpc = new MainIpc(i18n, ipcMain, sendNotify, mainWindow, saves, crawler)
     console.log('MainIPC init status: ' + (mainIpc !== undefined))
+  }).catch((err) => {
+    console.log(err)
+    app.quit()
   })
 }
 

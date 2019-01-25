@@ -43,7 +43,16 @@ const vue = new Vue({
   store,
   data () {
     return {
-      saves: {}
+      saves: {
+        setup: {
+          locale: 'en_US'
+        }
+      }
+    }
+  },
+  watch: {
+    'saves.setup.locale' (value) {
+      this.$i18n.loadLocaleAsync(value, __static)
     }
   },
   methods: {

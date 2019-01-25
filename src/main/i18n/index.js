@@ -7,15 +7,18 @@ class I18n {
     this.locale = 'en_US'
     this.lang = {
       'UI': 'UserInterface(Renderer)',
-      'UI.Button.Login': 'Login',
-      'UI.Button.Cancel': 'Cancel',
-      'UI.Button.Clear': 'Clear',
+      'UI.Login.LblAccount': 'Account',
+      'UI.Login.LblStudentID': 'StudentID',
+      'UI.Login.LblPassword': 'Password',
+      'UI.Login.BtnSubmit': 'Submit',
+      'UI.Login.BtnClear': 'Clear',
+      'UI.Login.BtnCancel': 'Cancel',
 
       'TO': 'Tosted',
       'TO.LoginSuccess': 'Login Success!',
       'TO.LoginFail': 'Login Fail: {0}',
       'TO.UrlNavigateSuccess': 'URL Navigate Success!',
-      'To.UrlNavigateFail': 'URL Navigate Fial: {0}',
+      'TO.UrlNavigateFail': 'URL Navigate Fial: {0}',
       'TO.FetchContractsSuccess': 'Fetch Contracts Success!',
       'TO.FetchContractsFail': 'Fetch Contracts Fail: {0}',
       'TO.FetchYearSchedulesSuccess': 'Fetch Year Schedules Success!',
@@ -25,7 +28,7 @@ class I18n {
       'NO.LoginSuccess': 'Login Success!',
       'NO.LoginFail': 'Login Fail: {0}',
       'NO.UrlNavigateSuccess': 'URL Navigate Success!',
-      'No.UrlNavigateFail': 'URL Navigate Fial: {0}',
+      'NO.UrlNavigateFail': 'URL Navigate Fial: {0}',
       'NO.FetchContractsSuccess': 'Fetch Contracts Success!',
       'NO.FetchContractsFail': 'Fetch Contracts Fail: {0}',
       'NO.FetchYearSchedulesSuccess': 'Fetch Year Schedules Success!',
@@ -49,6 +52,27 @@ class I18n {
         }
       })
     }
+  }
+
+  loadLocaleAsync (locale, folder) {
+    return new Promise((resolve, reject) => {
+      if (locale !== undefined && locale !== 'en_US' && folder !== undefined) {
+        let localePath = path.join(folder, 'i18n', locale + '.json')
+        return new Promise((resolve, reject) => {
+          fs.readFile(localePath, 'utf-8', (err, data) => {
+            return err ? reject(err) : resolve(data)
+          })
+        }).then((data) => {
+          this.locale = locale
+          this.localePath = localePath
+          this.lang = JSON.parse(data)
+          return resolve({locale: this.locale, localePath: this.localePath})
+        }).catch((err) => {
+          return reject(err)
+        })
+      }
+      return resolve({locale: this.locale, localePath: 'InBoundLanguage'})
+    })
   }
 
   t (key, ...args) {

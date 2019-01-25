@@ -11,7 +11,7 @@ export function resLogin (vue, event, data) {
     vue.$toasted.success(vue.$t('TO.LoginSuccess'))
     vue.$router.push({'name': 'dashboard'})
   } else {
-    vue.$toasted.error(vue.$t('To.LoginFail', (data.reason !== undefined ? data.reason : data)))
+    vue.$toasted.error(vue.$t('TO.LoginFail', (data.reason !== undefined ? data.reason : data)))
     console.log({'during': 'Login', 'reason': data})
   }
 }
@@ -46,7 +46,7 @@ export function resCrawlYearSchedules (vue, event, data) {
     }
     vue.$toasted.success(vue.$t('TO.FetchYearSchedulesSuccess'))
   } else {
-    vue.$toasted.error(vue.$t('.TO.FetchYearSchedulesFail'), (data.reason !== undefined ? data.reason : data))
+    vue.$toasted.error(vue.$t('TO.FetchYearSchedulesFail'), (data.reason !== undefined ? data.reason : data))
     console.log({'during': 'CrawlYearSchedules', 'reason': data})
   }
 }

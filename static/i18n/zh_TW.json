@@ -1,0 +1,31 @@
+{
+    "UI": "使用者介面(Renderer)",
+    "UI.Login.LblAccount": "帳號",
+    "UI.Login.LblStudentID": "學號",
+    "UI.Login.LblPassword": "密碼",
+    "UI.Login.BtnSubmit": "送出",
+    "UI.Login.BtnClear": "清除",
+    "UI.Login.BtnCancel": "取消",
+
+    "TO": "提醒",
+    "TO.LoginSuccess": "登入成功!",
+    "TO.LoginFail": "登入失敗: {0}",
+    "TO.UrlNavigateSuccess": "頁面導向成功!",
+    "To.UrlNavigateFail": "頁面導向成功: {0}",
+    "TO.FetchContractsSuccess": "聘僱契約更新成功!",
+    "TO.FetchContractsFail": "聘僱契約更新失敗: {0}",
+    "TO.FetchYearSchedulesSuccess": "年度排程更新成功!",
+    "TO.FetchYearSchedulesFail": "年度排程更新失敗: {0}",
+
+    "NO": "桌面提醒",
+    "NO.LoginSuccess": "登入成功!",
+    "NO.LoginFail": "登入失敗: {0}",
+    "NO.UrlNavigateSuccess": "頁面導向成功!",
+    "NO.UrlNavigateFail": "頁面導向成功: {0}",
+    "NO.FetchContractsSuccess": "聘僱契約更新成功!",
+    "NO.FetchContractsFail": "聘僱契約更新失敗: {0}",
+    "NO.FetchYearSchedulesSuccess": "年度排程更新成功!",
+    "NO.FetchYearSchedulesFail": "年度排程更新失敗: {0}",
+
+    "UnknownLangKey": "未知的語言鍵值"
+  }

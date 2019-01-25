@@ -7,15 +7,15 @@
       <div class="col-sm-6 offset-sm-3">
         <form>
           <div class="form-group">
-            <label>Account:</label>
-            <input v-model="loginData.account" type="text" class="form-control" placeholder="StudentID" required/>
+            <label>{{ this.$t('UI.Login.LblAccount') }}:</label>
+            <input v-model="loginData.account" type="text" class="form-control" :placeholder="this.$t('UI.Login.LblStudentID')" required/>
           </div>
           <div class="form-group">
-            <label>Password:</label>
-            <input v-model="loginData.password" type="password" class="form-control" placeholder="Password" required/>
+            <label>{{ this.$t('UI.Login.LblPassword') }}:</label>
+            <input v-model="loginData.password" type="password" class="form-control" :placeholder="this.$t('UI.Login.LblPassword')" required/>
           </div>
-          <button @click="login" type="button" class="btn btn-sm btn-primary">Submit</button>
-          <button type="reset" class="btn btn-sm btn-info">Clear</button>
+          <button @click="login" type="button" class="btn btn-sm btn-primary">{{ this.$t('UI.Login.BtnSubmit') }}</button>
+          <button type="reset" class="btn btn-sm btn-info">{{ this.$t('UI.Login.BtnClear') }}</button>
         </form>
       </div>
     </div>
