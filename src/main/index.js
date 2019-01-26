@@ -1,10 +1,10 @@
 'use strict'
 
 import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } from 'electron'
-import I18n from './i18n/index'
+import I18n from '../i18n/index'
 import Crawler from './crawler/index'
 import Saves from './saves'
-import MainIpc from './ipc/main'
+import MainIpc from '../ipc/main'
 
 /**
  * Set `__static` path to static files in production

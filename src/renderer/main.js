@@ -7,8 +7,8 @@ import axios from 'axios'
 import { ipcRenderer } from 'electron'
 import {
   sendSaves, updateSaves, resLogin, resLogout, resNavigateUrl,
-  resCrawlAvailableContracts, resCrawlYearSchedules } from '../main/ipc/renderer'
-import I18n from '../main/i18n/index'
+  resCrawlAvailableContracts, resCrawlYearSchedules } from '../ipc/renderer'
+import I18n from '../i18n/index'
 
 import Toasted from 'vue-toasted'
 import VModal from 'vue-js-modal'
