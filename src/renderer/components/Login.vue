@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav class="navbar navbar-expand-lg navbar-light">
-      <a class="navbar-brand" href="/">YunStudent</a> 
+      <a class="navbar-brand" href="/">YunWorker</a> 
     </nav>
     <div class="container">
       <div class="col-sm-6 offset-sm-3">

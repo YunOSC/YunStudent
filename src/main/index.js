@@ -97,7 +97,7 @@ function createTray () {
   const img = nativeImage.createFromPath(iconPath)
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'YunStudent',
+      label: 'YunWorker',
       click () {
         mainWindow.show()
       }
@@ -112,13 +112,13 @@ function createTray () {
   ])
 
   tray = new Tray(img)
-  tray.setToolTip('YunStudent')
+  tray.setToolTip('YunWorker')
   tray.setContextMenu(contextMenu)
 }
 
 function sendNotify (message, sound, title) {
   notifier.notify({
-    title: title || 'YunStudent',
+    title: title || 'YunWorker',
     message: message,
     icon: require('path').join(__static, '/icons/icon.ico'),
     sound: sound || true

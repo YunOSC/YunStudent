@@ -2,7 +2,6 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 
-import store from './store'
 import axios from 'axios'
 import { ipcRenderer } from 'electron'
 import {
@@ -40,7 +39,6 @@ Vue.component('navigator', Navigator)
 const vue = new Vue({
   components: { App },
   router,
-  store,
   data () {
     return {
       saves: {
