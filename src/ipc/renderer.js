@@ -8,10 +8,15 @@ export function updateSaves (vue, event, data) {
 
 export function resLogin (vue, event, data) {
   if (data.success !== undefined) {
+    if (data.data !== undefined) {
+      vue.$data.saves.contracts = data.data.contracts
+      vue.$data.saves.schedules = data.data.schedules
+    }
     vue.$toasted.success(vue.$t('TO.LoginSuccess'))
     vue.$router.push({'name': 'dashboard'})
   } else {
     vue.$toasted.error(vue.$t('TO.LoginFail', (data.reason !== undefined ? data.reason : data)))
+    vue.$emit('loginReset')
     console.log({'during': 'Login', 'reason': data})
   }
 }

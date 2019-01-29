@@ -7,15 +7,15 @@
       <div class="col-sm-6 offset-sm-3">
         <form>
           <div class="form-group">
-            <label>{{ this.$t('UI.Login.LblAccount') }}:</label>
-            <input v-model="loginData.account" type="text" class="form-control" :placeholder="this.$t('UI.Login.LblStudentID')" required/>
+            <label>{{ $t('UI.Login.LblAccount') }}:</label>
+            <input v-model="loginData.account" :disabled="logining" type="text" class="form-control" :placeholder="$t('UI.Login.LblStudentID')" required/>
           </div>
           <div class="form-group">
-            <label>{{ this.$t('UI.Login.LblPassword') }}:</label>
-            <input v-model="loginData.password" type="password" class="form-control" :placeholder="this.$t('UI.Login.LblPassword')" required/>
+            <label>{{ $t('UI.Login.LblPassword') }}:</label>
+            <input v-model="loginData.password" :disabled="logining" type="password" class="form-control" :placeholder="$t('UI.Login.LblPassword')" required/>
           </div>
-          <button @click="login" type="button" class="btn btn-sm btn-primary">{{ this.$t('UI.Login.BtnSubmit') }}</button>
-          <button type="reset" class="btn btn-sm btn-info">{{ this.$t('UI.Login.BtnClear') }}</button>
+          <button @click="login" :disabled="logining" type="button" class="btn btn-sm btn-primary">{{ logining ? $t('UI.Login.BtnLogining') : $t('UI.BtnSubmit') }}</button>
+          <button :disabled="logining" type="reset" class="btn btn-sm btn-info">{{ $t('UI.BtnClear') }}</button>
         </form>
       </div>
     </div>
@@ -27,6 +27,7 @@ export default {
   name: 'login',
   data () {
     return {
+      logining: false,
       loginData: {
         account: '',
         password: ''
@@ -42,6 +43,9 @@ export default {
     }
   },
   mounted: function () {
+    this.$root.$on('loginReset', () => {
+      this.logining = false
+    })
     this.loginData = this.$root.saves.login || this.loginData
     this.login()
   },
@@ -54,6 +58,7 @@ export default {
         if (account.length < 7 || password.length < 4) {
           this.$toasted.show('length not enough')
         } else {
+          this.logining = true
           this.$mainIpc.send('req-login', this.loginData)
         }
       }

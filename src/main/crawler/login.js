@@ -48,23 +48,38 @@ export function login (redirect, retryCounter, visitRetryCounter) {
       })
     }).then((loginBtn) => {
       loginBtn.click()
-      return this.driver.sleep(1000).then(() => {
+      return this.driver.sleep(500).then(() => {
+        let failMsg = this.By.xpath('//*[@id="messagebox-1001-displayfield-inputEl"]')
         let failBtn = this.By.xpath('//*[@id="button-1005-btnInnerEl"]')
-        return this.driver.findElement(failBtn).then((element) => {
-          element.click()
-          return this.ssoLogin(redirect, retryCounter + 1)
+        return this.driver.findElement(failMsg).then((element) => {
+          return element.getText().then((text) => {
+            return this.driver.findElement(failBtn).then((element) => {
+              element.click()
+              if (text.includes('Authentication failed.')) {
+                return resolve({'fail': true, 'reason': 'Authentication failed'})
+              } else if (text.includes('Invalid validation code.')) {
+                if (retryCounter < this.retryMaximum) {
+                  return this.ssoLogin(redirect, retryCounter + 1, visitRetryCounter).then((result) => resolve(result))
+                } else {
+                  return resolve({'fail': true, 'reason': 'Retry counter exceed quota: Invalid validation code'})
+                }
+              } else {
+                return resolve({'fail': true, 'reason': 'Unknown'})
+              }
+            })
+          })
         }).catch(() => {
-          return this.getCurrentUrl()
+          return this.getCurrentUrl().then((url) => {
+            if (url === redirect) {
+              return resolve({'success': true})
+            } else {
+              return this.get(redirect).then(() => {
+                return resolve({'success': true})
+              })
+            }
+          })
         })
       })
-    }).then((url) => {
-      if (url === redirect) {
-        return resolve(true)
-      } else {
-        return this.get(redirect).then(() => {
-          return resolve(true)
-        })
-      }
     }).catch((err) => {
       if (retryCounter < this.retryMaximum && this.highLayerError.includes(err.name)) {
         return this.driver.sleep(1000).then(() => {

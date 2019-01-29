@@ -1,11 +1,14 @@
 {
     "UI": "使用者介面(Renderer)",
+    "UI.BtnSubmit": "送出",
+    "UI.BtnClear": "清除",
+    "UI.BtnCancel": "取消",
+
+    "UI.Login": "登入組件",
     "UI.Login.LblAccount": "帳號",
     "UI.Login.LblStudentID": "學號",
     "UI.Login.LblPassword": "密碼",
-    "UI.Login.BtnSubmit": "送出",
-    "UI.Login.BtnClear": "清除",
-    "UI.Login.BtnCancel": "取消",
+    "UI.Login.BtnLogining": "登入中...",
 
     "TO": "提醒",
     "TO.LoginSuccess": "登入成功!",

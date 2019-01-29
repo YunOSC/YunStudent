@@ -52,17 +52,39 @@ class MainIpc {
     this.crawler.account = data.account
     this.crawler.password = data.password
     this.crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
-      if (result) {
+      if (result.success !== undefined) {
         this.saves.data.login = data
-        this.saves.writeSaves()
-        return {'success': true, 'i18n': 'NO.LoginSuccess'}
+        if (this.saves.data.contracts.length === 0 && this.saves.data.schedules.length === 0) {
+          return this.crawler.firstInitCrawl().then((result) => {
+            this.saves.data.contracts = result.contracts
+            this.saves.data.schedules = result.schedules
+            this.saves.writeSaves()
+            return {
+              'success': true,
+              'data': {
+                'contracts': this.saves.data.contracts,
+                'schedules': this.saves.data.schedules
+              },
+              'i18n': 'NO.LoginSuccess'
+            }
+          }).catch((err) => {
+            this.crawler.account = tempLogin.account
+            this.crawler.password = tempLogin.password
+            return {'fail': true, 'reason': 'First init crawl fail with error:' + err, 'i18n': 'NO.LoginFail'}
+          })
+        } else {
+          this.saves.writeSaves()
+          return {'success': true, 'i18n': 'NO.LoginSuccess'}
+        }
       } else {
-        return {'fail': true, 'reason': 'Unknwon', 'i18n': 'NO.LoginFail'}
+        this.crawler.account = tempLogin.account
+        this.crawler.password = tempLogin.password
+        return {'fail': true, 'reason': result.reason, 'i18n': 'NO.LoginFail'}
       }
     }).catch((err) => {
       this.crawler.account = tempLogin.account
       this.crawler.password = tempLogin.password
-      return {'fail': true, 'reason': err, 'i18n': 'No.LoginFail'}
+      return {'fail': true, 'reason': err, 'i18n': 'NO.LoginFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-login', finalRtn)
     })

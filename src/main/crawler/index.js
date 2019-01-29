@@ -63,6 +63,21 @@ class Crawler {
     })
   }
 
+  firstInitCrawl () {
+    let result = {}
+    return new Promise((resolve, reject) => {
+      return this.ssoFetchContracts().then((contracts) => {
+        result.contracts = contracts
+        return this.ssoFetchYearSchedules()
+      }).then((schedules) => {
+        result.schedules = schedules
+        return resolve(result)
+      }).catch((err) => {
+        return reject(err)
+      })
+    })
+  }
+
   ssoSource () {
     return this.driver.getPageSource().then((src) => {
       src = src.replace(/\/YunTechSSO\//g, 'https://webapp.yuntech.edu.tw/YunTechSSO/')

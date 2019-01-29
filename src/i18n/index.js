@@ -7,12 +7,15 @@ class I18n {
     this.locale = 'en_US'
     this.lang = {
       'UI': 'UserInterface(Renderer)',
+      'UI.BtnSubmit': 'Submit',
+      'UI.BtnClear': 'Clear',
+      'UI.BtnCancel': 'Cancel',
+
+      'UI.Login': 'Login Component',
       'UI.Login.LblAccount': 'Account',
       'UI.Login.LblStudentID': 'StudentID',
       'UI.Login.LblPassword': 'Password',
-      'UI.Login.BtnSubmit': 'Submit',
-      'UI.Login.BtnClear': 'Clear',
-      'UI.Login.BtnCancel': 'Cancel',
+      'UI.Login.BtnLogining': 'Logining...',
 
       'TO': 'Tosted',
       'TO.LoginSuccess': 'Login Success!',

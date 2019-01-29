@@ -61,10 +61,6 @@ export default {
       this.tasks = value.tasks || this.tasks
       this.schedules = value.schedules || this.schedules
       this.getAvaliableContract()
-
-      if (this.contracts === undefined || this.contracts == null || this.contracts.length === 0) {
-        this.fetchContract()
-      }
     }
   },
   mounted () {
@@ -72,10 +68,6 @@ export default {
     this.tasks = this.$root.saves.tasks || this.tasks
     this.schedules = this.$root.saves.schedules || this.schedules
     this.getAvaliableContract()
-
-    if (this.contracts === undefined || this.contracts == null || this.contracts.length === 0) {
-      this.fetchContract()
-    }
   },
   methods: {
     fetchContract () {

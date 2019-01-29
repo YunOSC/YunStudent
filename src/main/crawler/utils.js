@@ -12,14 +12,14 @@ export function visit (url, retryCounter) {
       })
     }
   }).then((loginResult) => {
-    if (loginResult) {
+    if (loginResult.success !== undefined) {
       return this.driver.wait(this.until.urlIs(url), 5000).then(() => {
-        return true
-      }).catch(() => {
-        return false
+        return {'success': true}
+      }).catch((err) => {
+        return {'fail': true, 'reason': err}
       })
     } else {
-      return false
+      return loginResult
     }
   }).catch((err) => {
     if (retryCounter < this.retryMaximum) {
