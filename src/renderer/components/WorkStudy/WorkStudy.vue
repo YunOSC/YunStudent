@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h5>WorkStudy</h5>
+    <h5>{{ $t('UI.WorkStudy.HdWordStudy') }}</h5>
     <info-summary/>
     <div>
       <modify-task/>

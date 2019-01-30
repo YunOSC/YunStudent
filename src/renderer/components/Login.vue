@@ -56,7 +56,7 @@ export default {
 
       if (account !== '' && password !== '') {
         if (account.length < 7 || password.length < 4) {
-          this.$toasted.show('length not enough')
+          this.$toasted.show(this.$t('TO.Login.LengthNotEnough'))
         } else {
           this.logining = true
           this.$mainIpc.send('req-login', this.loginData)

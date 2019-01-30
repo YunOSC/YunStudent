@@ -2,93 +2,74 @@
   <div>
     <modal name="modify-task" height="auto">
       <div class="container">
-        <h3>Modify Tasks</h3>
-        <table class="table tb-font-14">
-          <thead>
-            <tr>
-              <th>Action</th>
-              <th>Name</th>
-              <th>Start</th>
-              <th>End</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(each, index) in this.tasks" :key="index">
-              <td>
-                <div v-if="editing === -1">
-                  <button @click="removeTask(each)">
-                    <i class="fas fa-times-circle"></i>
-                  </button>
-                  <button @click="editTask(each, index)">
-                    <i class="fas fa-pen"></i>
-                  </button>
-                </div>
-                <div v-else>Editing...</div>
-              </td>
-              <td>{{ each.contract.name }}</td>
-              <td>{{ each.contract.start_date }}</td>
-              <td>{{ each.contract.end_date }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="row" style="padding-top: 3%;">
+          <div class="col-11">
+            <h3>{{ $t('UI.ModifyTask.HdModifyTask') }}</h3>
+          </div>
+          <div>
+            <button @click="$modal.hide('modify-task')">
+              <i class="fas fa-times-circle"></i>
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <table class="table tb-font-14">
+            <thead>
+              <tr>
+                <th>{{ $t('UI.ModifyTask.TbHdAction') }}</th>
+                <th>{{ $t('UI.ModifyTask.TbHdWorkUnit') }}</th>
+                <th>{{ $t('UI.ModifyTask.TbHdLocation') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(each, index) in this.tasks" :key="index">
+                <td>
+                  <div v-if="editing === -1">
+                    <button @click="removeTask(each)">
+                      <i class="fas fa-times-circle"></i>
+                    </button>
+                    <button @click="editTask(each, index)">
+                      <i class="fas fa-pen"></i>
+                    </button>
+                  </div>
+                  <div v-else>{{ $t('UI.ModifyTask.TbTdEditing') }}</div>
+                </td>
+                <td>{{ each.schedule.work_unit }}</td>
+                <td>{{ each.schedule.location }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <form class="form-horizontal">
           <div class="form-group row">
-            <label class="col-3">Available Contract</label>
-            <select v-model="selected.contract" class="form-control col">
-              <option v-for="(each, index) in availableContracts" :key="index" :value="each">
-                {{ each }}
+            <label class="col-3">{{ $t('UI.ModifyTask.FmLblAvailableSchedule') }}</label>
+            <select v-model="selected.schedule" class="form-control col">
+              <option v-for="(each, index) in availableSchedules" :key="index" :value="each">
+                {{ each.location }}
               </option>
             </select>
           </div>
           <div class="form-group row">
-            <label class="col-3">Select Week</label>
-            <div class="col row">
-              <div v-for="(each, index) in this.selected.weeks" :key="index">
-                <button class="btn btn-sm btn-primary" v-bind:class="{ disabled: each }" @click="setWeek(index)">
-                  {{ getWeekName(index) }}
-                </button>&nbsp;
-              </div>
+            <label class="col-3">{{ $t('UI.ModifyTask.FmLblOffset') }}</label>
+            <input v-model="selected.offset" class="form-contorl col-1" type="checkbox"/>
+            <div class="row offset-1">
+              <small>{{ $t('UI.ModifyTask.FmSmOffsetHint') }}</small>
+              <small>{{ $t('UI.ModifyTask.FmSmOffsetHintExample') }}</small>
             </div>
           </div>
           <div class="form-group row">
-            <label class="col-3">Start time</label>
-            <select v-model="selected.startTime.hour" class="form-control col-3">
-              <option v-for="index in 24" :key="index">{{ index - 1 }}</option>
-            </select>
-            <label class="col-1">:</label>
-            <select v-model="selected.startTime.minute" class="form-control col-3">
-              <option v-for="index in 60" :key="index">{{ index - 1 }}</option>
-            </select>
-          </div>
-          <div class="form-group row">
-            <label class="col-3">End time</label>
-            <select v-model="selected.endTime.hour" class="form-control col-3">
-              <option v-for="index in 24" :key="index">{{ index - 1 }}</option>
-            </select>
-            <label class="col-1">:</label>
-            <select v-model="selected.endTime.minute" class="form-control col-3">
-              <option v-for="index in 60" :key="index">{{ index - 1 }}</option>
-            </select>
-          </div>
-          <div class="form-group row">
-            <label class="col-3">Offset</label>
-            <input v-model="selected.offset" class="form-contorl" type="checkbox"/>
-            <small>This option will let system filling diaries with randomly range(in 10 minutes).</small>
-            <small>For example: Start time is 16:30, final diary may fill with 16:20 ~ 16:30 randomly.</small>
-          </div>
-          <div class="form-group row">
-            <label class="col-3">Description</label>
+            <label class="col-3">{{ $t('UI.ModifyTask.FmLblDescription') }}</label>
             <input v-model="selected.description" class="form-control col" type="text"/>
           </div>
           <div v-if="editing !== -1" class="form-group">
-            <input @click="confirmEditTask" type="submit" class="btn btn-sm btn-primary" value="Edit"/>
-            <input @click="cancelEditTask" type="button" class="btn btn-sm btn-warning" value="Cancel"/>
+            <input @click="confirmEditTask" type="button" class="btn btn-sm btn-primary" :value="$t('UI.ModifyTask.BtnEdit')"/>
+            <input @click="cancelEditTask" type="button" class="btn btn-sm btn-warning" :value="$t('UI.BtnCancel')"/>
           </div>
-          <div v-else>
-            <input @click="addTask" type="submit" class="btn btn-sm btn-primary" value="Add"/>
-            <input type="reset" class="btn btn-sm btn-info" value="Reset"/>
+          <div v-else class="form-group">
+            <input @click="addTask" type="button" class="btn btn-sm btn-primary" :value="$t('UI.BtnSubmit')"/>
+            <input type="reset" class="btn btn-sm btn-info" :value="$t('UI.BtnClear')"/>
           </div>
-      </form>
+        </form>
       </div>
     </modal>
   </div>
@@ -100,49 +81,33 @@ export default {
   data () {
     return {
       tasks: [],
-      contracts: [],
-      availableContracts: [],
+      schedules: [],
+      availableSchedules: [],
       editing: -1,
       selected: {
-        contract: {},
-        weeks: {
-          '0': false,
-          '1': false,
-          '2': false,
-          '3': false,
-          '4': false,
-          '5': false,
-          '6': false
-        },
-        startTime: {
-          hour: 0,
-          minute: 0
-        },
-        endTime: {
-          hour: 0,
-          minute: 0
-        },
+        schedule: {},
         offset: false,
         description: ''
-      }
+      },
+      temp: {}
     }
   },
   watch: {
     '$root.saves' (value) {
-      this.tasks = value.tasks
-      this.contracts = value.contracts
-      this.getAvaliableContracts()
+      this.tasks = value.tasks || this.tasks
+      this.schedules = value.schedules || this.schedules
+      this.getAvaliableSchedules()
       if (this.tasks === []) {
-        this.$toasted.info('No tasks founded!')
+        this.$toasted.info(this.$t('TO.ModifyTask.MissDescription'))
       }
     }
   },
   mounted () {
     this.tasks = this.$root.saves.tasks || this.tasks
-    this.contracts = this.$root.saves.contracts || this.contracts
-    this.getAvaliableContracts()
+    this.schedules = this.$root.saves.schedules || this.schedules
+    this.getAvaliableSchedules()
     if (this.tasks === []) {
-      this.$toasted.info('No tasks founded!')
+      this.$toasted.info(this.$t('TO.ModifyTask.MissDescription'))
     }
   },
   methods: {
@@ -152,61 +117,35 @@ export default {
     },
     resetSelected () {
       this.selected = {
-        contract: {},
-        weeks: {
-          '0': false,
-          '1': false,
-          '2': false,
-          '3': false,
-          '4': false,
-          '5': false,
-          '6': false
-        },
-        startTime: {
-          hour: 0,
-          minute: 0
-        },
-        endTime: {
-          hour: 0,
-          minute: 0
-        },
+        schedule: {},
+        offset: false,
         description: ''
       }
       this.savesAllTasks()
     },
-    getAvaliableContracts () {
-      let today = new Date()
-      let allContracts = []
-
-      if (this.contracts !== undefined) {
-        this.contracts.forEach((each) => {
-          if (today <= new Date(each.end_date)) {
-            allContracts.push(each.name)
+    getAvaliableSchedules () {
+      let schedule = []
+      this.schedules.forEach((each) => {
+        let contain = false
+        for (let i = 0; i < schedule.length; ++i) {
+          if (schedule[i].location === each.location && schedule[i].work_unit === each.work_unit) {
+            contain = true
+            break
           }
-        })
-      }
-      this.availableContracts = allContracts
-      return this.availableContracts
-    },
-    getWeekName (index) {
-      return ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'][index]
-    },
-    setWeek (index) {
-      this.selected.weeks[index] = !this.selected.weeks[index]
+        }
+        if (!contain) {
+          schedule.push({
+            'location': each.location,
+            'work_unit': each.work_unit
+          })
+        }
+      })
+      this.availableSchedules = schedule
     },
     taskValidate (task) {
       task = this.selected || task
-      let start = parseInt(task.startTime.hour) * 60 + parseInt(task.startTime.minute)
-      let end = parseInt(task.endTime.hour) * 60 + parseInt(task.endTime.minute)
-      if (start >= end) {
-        this.$toasted.error('Wrong start time or end time, end time should greater than start.')
-      } else if ((end - start) > 240) {
-        this.$toasted.error('One record\'s start and end time can not over 4 hours.')
-      } else if (task.startTime.hour <= 6 || task.startTime.hour >= 22 || task.endTime.hour <= 6 || task.endTime.hour >= 22) {
-        this.$toasted.info('Only male can work b/w 22:00 - 06:00, Make sure you are a male.')
-        return true
-      } else if (task.description === '') {
-        this.$toasted.error('Missing decription.')
+      if (task.description === '') {
+        this.$toasted.error(this.$t('TO.ModifyTask.MissDescription'))
       } else {
         return true
       }
@@ -215,7 +154,6 @@ export default {
     addTask () {
       if (this.taskValidate()) {
         this.tasks.push(this.selected)
-        this.getAvaliableContracts()
         this.resetSelected()
       }
     },
@@ -226,6 +164,7 @@ export default {
       }
     },
     cancelEditTask () {
+      this.tasks[this.editing] = this.temp
       this.editing = -1
       this.resetSelected()
     },
@@ -233,12 +172,12 @@ export default {
       let search = this.tasks.indexOf(element)
       if (search !== -1) {
         this.tasks.splice(search, 1)
-        this.getAvaliableContracts()
         this.savesAllTasks()
       }
     },
     editTask (element, index) {
       this.editing = index
+      this.temp = Object.assign({}, element)
       this.selected = element
     }
   }
