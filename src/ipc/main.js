@@ -12,6 +12,7 @@ class MainIpc {
     this.ipc.on('req-read-saves', (event, data) => this.reqReadSaves(event, data))
     this.ipc.on('req-login', (event, data) => this.reqLogin(event, data))
     this.ipc.on('req-logout', (event, data) => this.reqLogout(event, data))
+    this.ipc.on('req-exit', (event, data) => this.reqExit(event, data))
     this.ipc.on('req-navigate-url', (event, data) => this.reqNavigateUrl(event, data))
     this.ipc.on('req-crawl-available-contracts', (event, data) => this.reqCrawlAvailableContracts(event, data))
     this.ipc.on('req-crawl-year-schedules', (event, data) => this.reqCrawlYearSchedules(event, data))
@@ -49,11 +50,14 @@ class MainIpc {
       'password': this.crawler.password
     }
 
-    this.crawler.account = data.account
-    this.crawler.password = data.password
+    this.crawler.account = data.login.account
+    this.crawler.password = data.login.password
     this.crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
       if (result.success !== undefined) {
-        this.saves.data.login = data
+        if (data.setup.saveingLoginInfo) {
+          this.saves.data.login = data.login
+        }
+        this.saves.data.setup.saveingLoginInfo = data.setup.saveingLoginInfo
         if (this.saves.data.contracts.length === 0 && this.saves.data.schedules.length === 0) {
           return this.crawler.firstInitCrawl().then((result) => {
             this.saves.data.contracts = result.contracts
@@ -91,9 +95,24 @@ class MainIpc {
   }
 
   reqLogout (event, data) {
-    this.crawler.account = ''
-    this.crawler.password = ''
-    this.saves.writeSaves()
+    new Promise((resolve, reject) => {
+      this.crawler.account = ''
+      this.crawler.password = ''
+      this.saves.writeSaves()
+      return resolve({'success': true, 'i18n': 'NO.LogoutSuccess'})
+    }).then((finalRtn) => {
+      this.finalRtnNotify('res-logout', finalRtn)
+    })
+  }
+
+  reqExit (event, data) {
+    new Promise((resolve, reject) => {
+      this.saves.writeSaves()
+      return resolve(true)
+    }).then(() => {
+      this.window.removeAllListeners('close')
+      this.window.close()
+    })
   }
 
   reqNavigateUrl (event, data) {

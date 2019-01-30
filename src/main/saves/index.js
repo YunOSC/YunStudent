@@ -5,7 +5,8 @@ class Saves {
     this.savePath = savePath
     this.data = {
       setup: {
-        locale: 'en_US'
+        locale: 'en_US',
+        saveingLoginInfo: false
       },
       login: {},
       contracts: [],

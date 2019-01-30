@@ -56,6 +56,13 @@ const vue = new Vue({
   methods: {
     writeToSaves () {
       this.$mainIpc.send('req-write-saves', this.saves)
+    },
+    clearSaves () {
+      this.saves = {
+        'setup': {
+          'locale': 'en_US'
+        }
+      }
     }
   },
   template: '<App/>',

@@ -21,7 +21,14 @@ export function resLogin (vue, event, data) {
   }
 }
 
-export function resLogout (vue, event, data) {}
+export function resLogout (vue, event, data) {
+  if (data.success !== undefined) {
+    vue.$toasted.success(vue.$t('TO.LogoutSuccess'))
+  } else {
+    vue.$toasted.error(vue.$t('TO.LogoutFail', (data.reason !== undefined ? data.reason : data)))
+    console.log({'during': 'LogOut', 'reason': data})
+  }
+}
 
 export function resNavigateUrl (vue, event, data) {
   if (data.success !== undefined) {

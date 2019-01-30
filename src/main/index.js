@@ -17,12 +17,13 @@ if (process.env.NODE_ENV !== 'development') {
 let mainWindow, tray, mainIpc
 const i18n = new I18n()
 const notifier = require('node-notifier')
+const yunWorkerUserDataPath = app.getPath('userData')
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 const ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
-const saves = new Saves(require('path').join(__static, '/save.data'))
+const saves = new Saves(require('path').join(yunWorkerUserDataPath, 'save.data'))
 const crawler = new Crawler(ssoValidateServer, {})
 
 function killAllChrome () {
@@ -77,7 +78,7 @@ function createWindow () {
 
   createTray()
   saves.readSavesAsync().then((result) => {
-    console.log('Saves init status: ' + result)
+    console.log('Saves init status: ' + result + ', Path: ' + saves.savePath)
     return crawler.initDriver(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)

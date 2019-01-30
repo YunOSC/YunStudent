@@ -13,9 +13,12 @@
           <div class="form-group">
             <label>{{ $t('UI.Login.LblPassword') }}:</label>
             <input v-model="loginData.password" :disabled="logining" type="password" class="form-control" :placeholder="$t('UI.Login.LblPassword')" required/>
+            <input v-model="setup.saveingLoginInfo" type="checkbox"/>
+            <small>Save account & password</small>
           </div>
           <button @click="login" :disabled="logining" type="button" class="btn btn-sm btn-primary">{{ logining ? $t('UI.Login.BtnLogining') : $t('UI.BtnSubmit') }}</button>
           <button :disabled="logining" type="reset" class="btn btn-sm btn-info">{{ $t('UI.BtnClear') }}</button>
+          <button @click="exit" type="button" class="btn btn-sm btn-danger">{{ $t('UI.Login.BtnExit') }}</button>
         </form>
       </div>
     </div>
@@ -31,15 +34,18 @@ export default {
       loginData: {
         account: '',
         password: ''
+      },
+      setup: {
+        saveingLoginInfo: false
       }
     }
   },
   watch: {
     '$root.saves' (value) {
-      if (value.login.account !== undefined && value.login.password !== undefined) {
-        this.loginData = value.login
-        this.login()
-      }
+      this.loginData.account = value.login.account || this.loginData.account
+      this.loginData.password = value.login.password || this.loginData.password
+      this.setup.saveingLoginInfo = value.setup.saveingLoginInfo || this.setup.saveingLoginInfo
+      this.login()
     }
   },
   mounted: function () {
@@ -47,6 +53,7 @@ export default {
       this.logining = false
     })
     this.loginData = this.$root.saves.login || this.loginData
+    this.setup.saveingLoginInfo = this.$root.saves.setup.saveingLoginInfo || this.setup.saveingLoginInfo
     this.login()
   },
   methods: {
@@ -59,9 +66,17 @@ export default {
           this.$toasted.show(this.$t('TO.Login.LengthNotEnough'))
         } else {
           this.logining = true
-          this.$mainIpc.send('req-login', this.loginData)
+          this.$mainIpc.send('req-login', {
+            'login': this.loginData,
+            'setup': {
+              'saveingLoginInfo': this.setup.saveingLoginInfo
+            }
+          })
         }
       }
+    },
+    exit: function () {
+      this.$mainIpc.send('req-exit')
     }
   }
 }
