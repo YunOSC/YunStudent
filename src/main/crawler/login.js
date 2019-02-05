@@ -2,7 +2,7 @@ const http = require('axios')
 
 export function login (redirect, retryCounter, visitRetryCounter) {
   retryCounter = retryCounter || 0
-  console.log('login: ' + retryCounter + ' visit: ' + visitRetryCounter)
+  console.log('login: ' + retryCounter + ' visit: ' + visitRetryCounter + ' url: ' + redirect)
   return new Promise((resolve, reject) => {
     return this.getCurrentUrl((url) => {
       if (redirect === undefined || redirect == null) {
@@ -81,12 +81,14 @@ export function login (redirect, retryCounter, visitRetryCounter) {
         })
       })
     }).catch((err) => {
-      if (retryCounter < this.retryMaximum && this.highLayerError.includes(err.name)) {
-        return this.driver.sleep(1000).then(() => {
-          return this.ssoLogin(redirect, retryCounter + 1, visitRetryCounter).catch((err) => {
-            return reject(err)
+      if (!this.directThrowError.includes(err.name) && retryCounter < this.retryMaximum) {
+        if (this.highLayerError.includes(err.name)) {
+          return this.driver.sleep(1000).then(() => {
+            return this.ssoLogin(redirect, retryCounter + 1, visitRetryCounter).catch((err) => {
+              return reject(err)
+            })
           })
-        })
+        }
       }
       return reject(err)
     })

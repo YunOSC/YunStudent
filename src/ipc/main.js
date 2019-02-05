@@ -7,6 +7,8 @@ class MainIpc {
     this.saves = saves
     this.crawler = crawler
 
+    this.knowError = ['HousingReportNotFillError', 'TimeoutError']
+
     this.ipc.on('renderer-created', (event, data) => this.rendererCreated(event, data))
     this.ipc.on('req-write-saves', (event, data) => this.reqWriteSaves(event, data))
     this.ipc.on('req-read-saves', (event, data) => this.reqReadSaves(event, data))
@@ -74,21 +76,19 @@ class MainIpc {
           }).catch((err) => {
             this.crawler.account = tempLogin.account
             this.crawler.password = tempLogin.password
-            return {'fail': true, 'reason': 'First init crawl fail with error:' + err, 'i18n': 'NO.LoginFail'}
+            return {'fail': true, 'reason': 'First init crawl fail with error:' + JSON.parse(err), 'i18n': 'NO.LoginFail'}
           })
         } else {
           this.saves.writeSaves()
           return {'success': true, 'i18n': 'NO.LoginSuccess'}
         }
       } else {
-        this.crawler.account = tempLogin.account
-        this.crawler.password = tempLogin.password
-        return {'fail': true, 'reason': result.reason, 'i18n': 'NO.LoginFail'}
+        throw result.reason
       }
     }).catch((err) => {
       this.crawler.account = tempLogin.account
       this.crawler.password = tempLogin.password
-      return {'fail': true, 'reason': err, 'i18n': 'NO.LoginFail'}
+      return {'fail': true, 'reason': (this.knowError.includes(err.name) ? err.name : err), 'i18n': 'NO.LoginFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-login', finalRtn)
     })

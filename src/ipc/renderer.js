@@ -1,3 +1,5 @@
+const knowError = ['HousingReportNotFillError', 'TimeoutError']
+
 export function sendSaves (vue, event, data) {
   vue.$data.saves = data
 }
@@ -15,9 +17,20 @@ export function resLogin (vue, event, data) {
     vue.$toasted.success(vue.$t('TO.LoginSuccess'))
     vue.$router.push({'name': 'dashboard'})
   } else {
-    vue.$toasted.error(vue.$t('TO.LoginFail', (data.reason !== undefined ? data.reason : data)))
+    let output
+    if (data.reason !== undefined) {
+      output = data.reason
+      if (knowError.includes(output)) {
+        output = vue.$t('TO.LoginFail.' + knowError[knowError.indexOf(output)])
+      } else {
+        output = output.name
+      }
+    } else {
+      output = data
+    }
+    vue.$toasted.error(vue.$t('TO.LoginFail', output))
     vue.$emit('loginReset')
-    console.log({'during': 'Login', 'reason': data})
+    console.log({'during': 'Login', 'reason': output})
   }
 }
 

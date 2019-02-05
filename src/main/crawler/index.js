@@ -10,6 +10,7 @@ class Crawler {
     this.browserArgs = ['--start-maximized', '--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-plugins']
     this.globalError = ['WebDriverError', 'NoSuchWindowError', 'TypeError']
     this.highLayerError = ['NoSuchElementError']
+    this.directThrowError = ['HousingReportNotFillError']
 
     this.By = webdriver.By
     this.until = webdriver.until
@@ -21,6 +22,7 @@ class Crawler {
     this.retryMaximum = 3
 
     this.ssoVisit = utilsJS.visit.bind(this)
+    this.simpleErrorHandle = utilsJS.simpleErrorHandle.bind(this)
     this.ssoLogin = loginJS.login.bind(this)
     this.ssoFetchContracts = workStudyJS.fetchContracts.bind(this)
     this.ssoFetchYearSchedules = workStudyJS.fetchYearSchedules.bind(this)
@@ -97,7 +99,9 @@ class Crawler {
       })
     } else {
     */
-    return this.driver.get(url).catch((err) => {
+    return this.driver.get(url).catch(() => {
+      return this.simpleErrorHandle()
+    }).catch((err) => {
       if (this.globalError.includes(err.name) && retryCounter < this.retryMaximum) {
         return this.initDriver(this.account, this.password).then(() => {
           return this.get(url, retryCounter + 1)
@@ -110,7 +114,9 @@ class Crawler {
 
   getCurrentUrl (retryCounter) {
     retryCounter = retryCounter || 0
-    return this.driver.getCurrentUrl().catch((err) => {
+    return this.driver.getCurrentUrl().catch(() => {
+      return this.simpleErrorHandle()
+    }).catch((err) => {
       if (this.globalError.includes(err.name) && retryCounter < this.retryMaximum) {
         return this.initDriver(this.account, this.password).then(() => {
           return this.getCurrentUrl(retryCounter + 1)
@@ -122,7 +128,9 @@ class Crawler {
 
   findElement (locator, retryCounter) {
     retryCounter = retryCounter || 0
-    return this.driver.findElement(locator).catch((err) => {
+    return this.driver.findElement(locator).catch(() => {
+      return this.simpleErrorHandle()
+    }).catch((err) => {
       if (this.globalError.includes(err.name) && retryCounter < this.retryMaximum) {
         return this.initDriver(this.account, this.password).then(() => {
           return this.findElement(locator, retryCounter + 1)
@@ -134,13 +142,25 @@ class Crawler {
 
   findElements (locator, retryCounter) {
     retryCounter = retryCounter || 0
-    return this.driver.findElements(locator).catch((err) => {
+    return this.driver.findElements(locator).catch(() => {
+      return this.simpleErrorHandle()
+    }).catch((err) => {
       if (this.globalError.includes(err.name) && retryCounter < this.retryMaximum) {
         return this.initDriver(this.account, this.password).then(() => {
           return this.findElements(locator, retryCounter + 1)
         })
       }
       throw err
+    })
+  }
+
+  waitForUrl (url, millisecond) {
+    return this.driver.wait(this.until.urlIs(url), millisecond || 5000).catch(() => {
+      return this.simpleErrorHandle()
+    }).then(() => {
+      return {'success': true}
+    }).catch((err) => {
+      return {'fail': true, 'reason': err}
     })
   }
 
