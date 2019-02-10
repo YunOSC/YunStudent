@@ -4,8 +4,10 @@ const format = require('string-format')
 
 class I18n {
   constructor () {
-    this.locale = 'en_US'
-    this.lang = {
+    this.defaultLocale = 'en_US'
+    this.en_US = {
+      'alias': 'English',
+
       'UI': 'UserInterface(Renderer)',
       'UI.BtnSubmit': 'Submit',
       'UI.BtnClear': 'Clear',
@@ -20,6 +22,14 @@ class I18n {
 
       'UI.Dashboard': 'Dashboard Component',
       'UI.Dashboard.HdDashboard': 'Dashboard',
+
+      'UI.Setup.HdSetup': 'Setup',
+      'UI.Setup.HdAccount': 'Account',
+      'UI.Setup.LblSaveLoginInfo': 'Save Login Info',
+      'UI.Setup.SmSaveLoginInfoHint': 'Save your Account and Password, no need to type it everytime.',
+      'UI.Setup.HdUser': 'User',
+      'UI.Setup.LblLanguage': 'Language',
+      'UI.Setup.BtnReset': 'Reset',
 
       'UI.WorkStudy': 'WorkStudy Component',
       'UI.WorkStudy.HdWordStudy': 'WorkStudy',
@@ -75,6 +85,8 @@ class I18n {
 
       'UnknownLangKey': 'Unknown Language Key'
     }
+    this.locale = this.defaultLocale
+    this.lang = this.en_US
     this.loadLocale()
   }
 
@@ -90,6 +102,9 @@ class I18n {
           this.lang = JSON.parse(data)
         }
       })
+    } else if (locale === 'en_US') {
+      this.locale = this.defaultLocale
+      this.lang = this.en_US
     }
   }
 
@@ -109,6 +124,9 @@ class I18n {
         }).catch((err) => {
           return reject(err)
         })
+      } else if (locale === 'en_US') {
+        this.locale = this.defaultLocale
+        this.lang = this.en_US
       }
       return resolve({locale: this.locale, localePath: 'InBoundLanguage'})
     })
