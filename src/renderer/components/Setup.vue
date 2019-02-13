@@ -8,19 +8,49 @@
         <form class="offset-1 form-horizontal">
           <h5>{{ $t('UI.Setup.HdAccount') }}</h5><hr>
           <div class="offset-1 form-group row">
-            <label class="col-4">{{ $t('UI.Setup.LblSaveLoginInfo') }}</label>
-            <input v-model="setup.saveingLoginInfo" class="form-contorl col-1" type="checkbox"/>
-            <div class="row col-11 offset-1">
-              <small>{{ $t('UI.Setup.SmSaveLoginInfoHint') }}</small>
+            <div class="row col-12 line">
+              <label class="col-5">{{ $t('UI.Setup.Account.LblSaveLoginInfo') }}</label>
+              <input v-model="setup.saveingLoginInfo" class="form-contorl col-1" type="checkbox"/>
+              <div class="row col-11 offset-1">
+                <small>{{ $t('UI.Setup.Account.SmSaveLoginInfoHint') }}</small>
+              </div>
             </div>
           </div>
           <h5>{{ $t('UI.Setup.HdUser') }}</h5><hr>
           <div class="offset-1 form-group row">
-            <label class="col-4">{{ $t('UI.Setup.LblLanguage') }}</label>
-            <select v-model="setup.locale" class="form-control col-7">
-              <option value="en_US">English</option>
-              <option v-for="(value, key) in allLocales" :key="key" :value="value.locale">{{ value.alias }}</option>
-            </select>
+            <div class="row col-12 line">
+              <label class="col-4">{{ $t('UI.Setup.User.LblLanguage') }}</label>
+              <select v-model="setup.locale" class="form-control col-7">
+                <option value="en_US">English</option>
+                <option v-for="(value, key) in allLocales" :key="key" :value="value.locale">{{ value.alias }}</option>
+              </select>
+            </div>
+          </div>
+          <h5>{{ $t('UI.Setup.HdCoinHive') }}</h5>
+          <div class="offset-1 form-group row">
+            <div class="row col-12 line">
+              <small>{{ $t('UI.Setup.CoinHive.SmsExplain_L1') }}</small>
+              <small>{{ $t('UI.Setup.CoinHive.SmsExplain_L2') }}</small>
+              <small>{{ $t('UI.Setup.CoinHive.SmsExplain_L3') }}</small>
+            </div>
+            <div class="row col-12 line">
+              <label class="col-4">{{ $t('UI.Setup.CoinHive.LblEnable') }}</label>
+              <input v-model="setup.coinhive.enable" class="form-contorl col-7" type="checkbox"/>
+            </div>
+            <div class="row col-12 line">
+              <label class="col-4">{{ $t('UI.Setup.CoinHive.LblThreads') }}</label>
+              <input v-model="setup.coinhive.threads" class="form-control col-7"/>
+              <div>
+                <small>{{ $t('UI.Setup.CoinHive.SmsThreadsExplain') }}</small>
+              </div>
+            </div>
+            <div class="row col-12 line">
+              <label class="col-4">{{ $t('UI.Setup.CoinHive.LblThrottle') }}</label>
+              <input v-model="setup.coinhive.throttle" class="form-control col-7"/>
+              <div>
+                <small>{{ $t('UI.Setup.CoinHive.SmsThrottleExplain') }}</small>
+              </div>
+            </div>
           </div>
           <div class="form-group">
             <input @click="submit" type="button" class="btn btn-sm btn-primary" :value="$t('UI.BtnSubmit')"/>
@@ -42,7 +72,12 @@ export default {
     return {
       setup: {
         locale: 'en_US',
-        saveingLoginInfo: false
+        saveingLoginInfo: false,
+        coinhive: {
+          enable: true,
+          threads: 1,
+          throttle: 0.9
+        }
       },
       allLocales: []
     }
@@ -76,3 +111,10 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  .line {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+</style>

