@@ -28,6 +28,7 @@ const saves = new Saves(require('path').join(yunWorkerUserDataPath, 'save.data')
 const crawler = new Crawler(ssoValidateServer, {})
 let miner = null
 
+/*
 function killAllChrome () {
   let find = require('find-process')
   return find('name', 'chrome').then((list) => {
@@ -57,19 +58,21 @@ function killAllChromeDriver () {
     })
   })
 }
-
+*/
 function quitApp () {
   miner.kill().then(() => {
     console.log('Miner stoped.')
-    return killAllChromeDriver()
+    // return killAllChromeDriver()
+    return crawler.close()
   }).then(() => {
+    app.quit()
+  })
+  /* .then(() => {
     console.log('ChromeDriver cleaned.')
     return killAllChrome()
   }).then(() => {
     console.log('Chrome cleaned.')
-  }).then(() => {
-    app.quit()
-  })
+  }) */
 }
 
 function createWindow () {
@@ -96,7 +99,7 @@ function createWindow () {
     return saves.readSavesAsync()
   }).then((result) => {
     console.log('Saves init status: ' + result + ', Path: ' + saves.savePath)
-    return crawler.initDriver(saves.data.login.account, saves.data.login.password)
+    return crawler.init(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)
     return createMiner()

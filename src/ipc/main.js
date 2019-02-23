@@ -21,6 +21,7 @@ class MainIpc {
     this.ipc.on('req-navigate-url', (event, data) => this.reqNavigateUrl(event, data))
     this.ipc.on('req-crawl-available-contracts', (event, data) => this.reqCrawlAvailableContracts(event, data))
     this.ipc.on('req-crawl-year-schedules', (event, data) => this.reqCrawlYearSchedules(event, data))
+    this.ipc.on('req-auto-diary', (event, data) => this.reqAutoDiary(event, data))
   }
 
   minerSetup (data, username) {
@@ -87,14 +88,14 @@ class MainIpc {
 
     this.crawler.account = data.login.account
     this.crawler.password = data.login.password
-    this.crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/').then((result) => {
+    this.crawler.ssoVisit('https://webapp.yuntech.edu.tw/YunTechSSO/Home/Index').then((result) => {
       if (result.success !== undefined) {
         if (data.setup.saveingLoginInfo) {
           this.saves.data.login = data.login
         }
         this.saves.data.setup.saveingLoginInfo = data.setup.saveingLoginInfo
         if (this.saves.data.contracts.length === 0 && this.saves.data.schedules.length === 0) {
-          return this.crawler.firstInitCrawl().then((result) => {
+          return this.crawler.appFirstTimeLogin().then((result) => {
             this.saves.data.contracts = result.contracts
             this.saves.data.schedules = result.schedules
             this.saves.writeSaves()
@@ -196,6 +197,14 @@ class MainIpc {
       return {'fail': true, 'reason': err, 'i18n': 'NO.FetchYearSchedulesFail'}
     }).then((finalRtn) => {
       this.finalRtnNotify('res-crawl-year-schedules', finalRtn)
+    })
+  }
+
+  reqAutoDiary (event, data) {
+    this.crawler.ssoAddWorkDiary().catch((err) => {
+      console.log(err)
+    }).then((result) => {
+      console.log(result)
     })
   }
 }

@@ -1,55 +1,29 @@
-import HousingReportNotFillError from './errors/HousingReportNotFillError'
-import UnknownError from './errors/UnknownError'
+export async function visit (url, retryCount) {
+  return new Promise(async (resolve, reject) => {
+    return (async () => {
+      let currentUrl = await this.page.url()
+      if (currentUrl !== url) {
+        await this.page.goto(url)
+        const currentUrl = await this.page.url()
 
-export function simpleErrorHandle () {
-  return new Promise((resolve, reject) => {
-    this.driver.getPageSource().then((src) => {
-      if (src.includes('Student Housing Report')) {
-        return reject(new HousingReportNotFillError())
+        if (currentUrl.includes('https://webapp.yuntech.edu.tw/YunTechSSO/Account/Login')) {
+          // Needs login
+          await this.ssoLogin(url).then((loginResult) => {
+            if (loginResult.fail !== undefined) {
+              return resolve({'fail': true, 'reason': loginResult.reason})
+            } else {
+              return this.ssoVisit(url)
+            }
+          })
+        }
+      }
+      return resolve({'success': true})
+    })().catch((err) => {
+      if ((retryCount || 0) <= this.maximumRetryCount) {
+        return this.ssoVisit(url, retryCount + 1)
       } else {
-        return reject(new UnknownError())
+        return resolve({'fail': true, 'reason': err})
       }
     })
-  })
-}
-
-export function visit (url, retryCounter) {
-  retryCounter = retryCounter || 0
-  console.log('visit: ' + retryCounter + ' url: ' + url)
-  return this.getCurrentUrl().then((currentUrl) => {
-    return url === currentUrl
-  }).then((result) => {
-    if (result) {
-      return true
-    } else {
-      return this.get(url).then(() => {
-        return this.ssoLogin(url, undefined, retryCounter)
-      })
-    }
-  }).then((loginResult) => {
-    if (loginResult.success !== undefined) {
-      return this.waitForUrl(url)
-    } else {
-      return loginResult
-    }
-  }).catch((err) => {
-    if (!this.directThrowError.includes(err.name) && retryCounter < this.retryMaximum) {
-      if (this.globalError.includes(err.name)) {
-        return this.initDriver(this.account, this.password).then(() => {
-          return this.driver.sleep(1000)
-        }).then(() => {
-          return this.ssoVisit(url, retryCounter + 1)
-        }).catch((err) => {
-          // Extract the inner reject.
-          throw err
-        })
-      } else {
-        return this.ssoVisit(url, retryCounter + 1).catch((err) => {
-          // Extract the inner reject.
-          throw err
-        })
-      }
-    }
-    throw err
   })
 }

@@ -1,96 +1,95 @@
-const http = require('axios')
+const axios = require('axios')
 
-export function login (redirect, retryCounter, visitRetryCounter) {
-  retryCounter = retryCounter || 0
-  console.log('login: ' + retryCounter + ' visit: ' + visitRetryCounter + ' url: ' + redirect)
-  return new Promise((resolve, reject) => {
-    return this.getCurrentUrl((url) => {
-      if (redirect === undefined || redirect == null) {
-        return this.get('https://webapp.yuntech.edu.tw/YunTechSSO/Account/Login')
-      }
-    }).then(() => {
-      // Fetch validation code from backend.
-      let validationCode = this.By.xpath('//img[@id="ValidationImage"]')
-      return this.driver.wait(this.until.elementsIsPresent(validationCode), 5000).then(() => {
-        return this.findElement(validationCode).then((element) => {
-          return element.takeScreenshot()
-        })
-      }).then((base64Img) => {
-        return http({
+export async function appFirstTimeLogin () {
+  return new Promise(async (resolve, reject) => {
+    let result = {}
+    result.contracts = await this.ssoFetchContracts()
+    result.schedules = await this.ssoFetchYearSchedules()
+    return resolve(result)
+  })
+}
+
+/**
+ * Login function
+ *  Actuall perform login to SSO.
+ * @param {string} redirect optional, after login to redirect to.
+ *  Adding this param will check url is it at last of function.
+ *  Default is to check SSO index element exists or not.
+ * @returns {object} login and redirect result(if redirect undefined).
+ *  If success, object will contain 'success': true element.
+ *  Or 'fail': true and 'reason': err.
+ * @throws {error}
+ *  If non of any error can catch by last waiting await.
+ *  It will throws error by async function itself.
+ *  Should be catch by callee.
+ */
+export async function login (redirect, retryCount) {
+  return new Promise(async (resolve, reject) => {
+    return (async () => {
+      // Wait for validate image, fetch, and recognize.
+      await this.page.waitForXPath('//img[@id="ValidationImage"]', {visible: true, timeout: 5000})
+      await this.page.waitFor(100)
+      let validateCode = '0000'
+      await this.page.$x('//img[@id="ValidationImage"]').then((el) => {
+        return el[0].screenshot({encoding: 'base64'})
+      }).then((base64) => {
+        return axios({
           url: this.ssoValidateServer + '/validationCode/base64',
           method: 'POST',
           headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          data: {image: base64Img}
+          data: {image: base64}
         }).then((response) => {
-          return response.data.success !== undefined ? response.data : response.data
+          if (response.data.success !== undefined) {
+            validateCode = response.data.code
+          } else {
+            return {'fail': true, 'reason': response.data}
+          }
         })
       })
-    }).then((codeData) => {
-      // Fill in form datas
-      return this.findElement(this.By.xpath('//*[@id="pLoginName-inputEl"]')).then((element) => {
-        // Account
-        element.clear()
-        return element.sendKeys(this.account).then(() => {
-          return this.findElement(this.By.xpath('//*[@id="pLoginPassword-inputEl"]'))
-        })
-      }).then((element) => {
-        // Password
-        element.clear()
-        return element.sendKeys(this.password).then(() => {
-          return this.findElement(this.By.xpath('//*[@id="pSecretString-inputEl"]'))
-        })
-      }).then((element) => {
-        // Validation Code
-        element.clear()
-        return element.sendKeys(codeData.code).then(() => {
-          return this.findElement(this.By.xpath('//*[@id="LoginButton-btnInnerEl"]'))
-        })
-      })
-    }).then((loginBtn) => {
-      loginBtn.click()
-      return this.driver.sleep(500).then(() => {
-        let failMsg = this.By.xpath('//*[@id="messagebox-1001-displayfield-inputEl"]')
-        let failBtn = this.By.xpath('//*[@id="button-1005-btnInnerEl"]')
-        return this.driver.findElement(failMsg).then((element) => {
-          return element.getText().then((text) => {
-            return this.driver.findElement(failBtn).then((element) => {
-              element.click()
-              if (text.includes('Authentication failed.')) {
-                return resolve({'fail': true, 'reason': 'Authentication failed'})
-              } else if (text.includes('Invalid validation code.')) {
-                if (retryCounter < this.retryMaximum) {
-                  return this.ssoLogin(redirect, retryCounter + 1, visitRetryCounter).then((result) => resolve(result))
-                } else {
-                  return resolve({'fail': true, 'reason': 'Retry counter exceed quota: Invalid validation code'})
-                }
-              } else {
-                return resolve({'fail': true, 'reason': 'Unknown'})
-              }
-            })
-          })
-        }).catch(() => {
-          return this.getCurrentUrl().then((url) => {
-            if (url === redirect) {
-              return resolve({'success': true})
-            } else {
-              return this.get(redirect).then(() => {
-                return resolve({'success': true})
-              })
-            }
-          })
-        })
-      })
-    }).catch((err) => {
-      if (!this.directThrowError.includes(err.name) && retryCounter < this.retryMaximum) {
-        if (this.highLayerError.includes(err.name)) {
-          return this.driver.sleep(1000).then(() => {
-            return this.ssoLogin(redirect, retryCounter + 1, visitRetryCounter).catch((err) => {
-              return reject(err)
-            })
-          })
+
+      // Fill in login info.
+      const accountEl = await this.page.$x('//*[@id="pLoginName-inputEl"]')
+      const passwordEl = await this.page.$x('//*[@id="pLoginPassword-inputEl"]')
+      const codeEl = await this.page.$x('//*[@id="pSecretString-inputEl"]')
+      const btnEl = await this.page.$x('//*[@id="LoginButton-btnInnerEl"]')
+
+      await accountEl[0].click({clickCount: 3})
+      await accountEl[0].type(this.account)
+      await passwordEl[0].click({clickCount: 3})
+      await passwordEl[0].type(this.password)
+      await codeEl[0].click({clickCount: 3})
+      await codeEl[0].type(validateCode)
+      await btnEl[0].click()
+      await this.page.waitFor(1000)
+
+      const errMsgEl = await this.page.$x('//*[@id="messagebox-1001-displayfield-inputEl"]')
+      if (errMsgEl.length !== 0) {
+        const text = await (await errMsgEl[0].getProperty('textContent')).jsonValue()
+        let reason = 'Unknown'
+        let retry = false
+        if (text.includes('Account not exist or registered.')) {
+          reason = 'Account not exist'
+        } else if (text.includes('Authentication failed.')) {
+          reason = 'Authentication failed'
+        } else if (text.includes('Invalid validation code.')) {
+          reason = 'Invalid validation code'
+          retry = (retryCount || 0) <= this.maximumRetryCount
+        }
+        return {'fail': true, 'reason': reason, 'retry': retry}
+      }
+      return {'success': true}
+    })().catch((err) => {
+      return reject(err)
+    }).then((loginResult) => {
+      // console.log(retryCount + ' + ' + JSON.stringify(loginResult))
+      if (loginResult.fail !== undefined) {
+        if (loginResult.retry) {
+          return this.ssoLogin(redirect, retryCount + 1)
+        } else {
+          loginResult.reason = 'Retry counter exceed quota: ' + loginResult.reason
         }
       }
-      return reject(err)
+      return resolve(loginResult)
     })
   })
 }
