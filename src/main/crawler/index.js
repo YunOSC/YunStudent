@@ -14,6 +14,7 @@ class Crawler {
     this.ssoVisit = utilsJS.visit.bind(this)
     this.ssoFetchContracts = workStudyJS.fetchContracts.bind(this)
     this.ssoFetchYearSchedules = workStudyJS.fetchYearSchedules.bind(this)
+    this.ssoAddWorkDiary = workStudyJS.addWorkDiary.bind(this)
   }
 
   async init (account, password) {

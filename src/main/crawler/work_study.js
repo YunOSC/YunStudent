@@ -6,25 +6,26 @@ export async function fetchContracts () {
   await this.page.waitForXPath('//table[@id="mainTable"]/tbody/tr')
 
   // Fetch contract and push to array.
-  let contracts = []
-  const tableEls = await this.page.$x('//table[@id="mainTable"]/tbody/tr')
-  for (let tableEl of tableEls) {
-    let text = await (await tableEl.getProperty('textContent')).jsonValue()
-    let textArr = text.split('\n                    ')
-    contracts.push({
-      'start_date': textArr[1],
-      'end_date': textArr[2],
-      'name': textArr[3],
-      'host': textArr[4],
-      'moderator': textArr[5],
-      'disability': textArr[6],
-      'type': textArr[7],
-      'salaries': textArr[8],
-      'evaluation_hours': textArr[9].replace(' ', ''),
-      'create_datetime': textArr[10].substring(1)
-    })
-  }
-  return contracts
+  return this.page.$$eval('table#mainTable > tbody > tr', (tables) => {
+    let contracts = []
+    for (let i = 0; i < tables.length; ++i) {
+      const tds = tables[i].querySelectorAll('td')
+      contracts.push({
+        'start_date': tds[0].textContent,
+        'end_date': tds[1].textContent,
+        'name': tds[2].textContent,
+        'host': tds[3].textContent,
+        'moderator': tds[4].textContent,
+        'disability': tds[5].textContent,
+        'type': tds[6].textContent,
+        'salaries': tds[7].textContent,
+        'evaluation_hours': tds[8].textContent,
+        'create_datetime': tds[9].textContent,
+        'contract_id': tds[10].querySelector('span > a').href.split('ApplyId=')[1]
+      })
+    }
+    return contracts
+  })
 }
 
 export async function fetchYearSchedules () {
@@ -49,4 +50,29 @@ export async function fetchYearSchedules () {
     })
   })
   return scheduleArray
+}
+
+export async function addWorkDiary (task) {
+  return new Promise((resolve, reject) => {
+    return (async () => {
+      await this.page.once('dialog', (dialog) => dialog.accept())
+      const visitResult = await this.ssoVisit('https://webapp.yuntech.edu.tw/workstudy/StudWorkRecord/Create')
+      if (visitResult.success !== undefined) {
+        await this.page.select('select#ApplyDate', new Date().toISOString().substring(0, 10).replace(/-/g, '/') + ',' + task.contract_id)
+        await this.page.select('select#StartHour', '1')
+        await this.page.select('select#StartMin', '1')
+        await this.page.select('select#EndHour', '1')
+        await this.page.select('select#EndMin', '1')
+        await this.page.type('input#Work', task.description)
+
+        return {'success': true}
+      } else {
+        return {'fail': true, 'reason': visitResult.reason}
+      }
+    })().catch((err) => {
+      return reject(err)
+    }).then((result) => {
+      return resolve(result)
+    })
+  })
 }

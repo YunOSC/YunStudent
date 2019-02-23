@@ -17,6 +17,10 @@ export async function visit (url, retryCount) {
           })
         }
       }
+      currentUrl = await this.page.url()
+      if (!currentUrl.includes(url)) {
+        await this.page.goto(url)
+      }
       return resolve({'success': true})
     })().catch((err) => {
       if ((retryCount || 0) <= this.maximumRetryCount) {
