@@ -25,6 +25,7 @@ class Crawler {
       args: ['--no-sandbox']
     })
     this.page = await this.browser.newPage()
+    return true
   }
 
   async close () {

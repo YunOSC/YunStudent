@@ -1,10 +1,10 @@
 'use strict'
 
 import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } from 'electron'
-import CoinHive from 'coin-hive'
 import I18n from '../i18n/index'
 import Crawler from './crawler/index'
 import Saves from './saves'
+import Miner from './miner'
 import MainIpc from '../ipc/main'
 
 /**
@@ -26,53 +26,15 @@ const winURL = process.env.NODE_ENV === 'development'
 const ssoValidateServer = 'http://sso-validate.clo5de.info:5000'
 const saves = new Saves(require('path').join(yunWorkerUserDataPath, 'save.data'))
 const crawler = new Crawler(ssoValidateServer, {})
-let miner = null
+const miner = new Miner()
 
-/*
-function killAllChrome () {
-  let find = require('find-process')
-  return find('name', 'chrome').then((list) => {
-    return new Promise((resolve) => {
-      list.forEach((each, index, array) => {
-        if (crawler.browserArgs.every(elem => each.cmd.split(' ').indexOf(elem) > -1)) {
-          process.kill(each.pid)
-        }
-        if (index === array.length - 1) {
-          return resolve(true)
-        }
-      })
-    })
-  })
-}
-
-function killAllChromeDriver () {
-  let find = require('find-process')
-  return find('name', 'chromedriver').then((list) => {
-    return new Promise((resolve) => {
-      list.forEach((each, index, array) => {
-        process.kill(each.pid)
-        if (index === array.length - 1) {
-          return resolve(true)
-        }
-      })
-    })
-  })
-}
-*/
 function quitApp () {
-  miner.kill().then(() => {
+  miner.stop().then(() => {
     console.log('Miner stoped.')
-    // return killAllChromeDriver()
     return crawler.close()
   }).then(() => {
     app.quit()
   })
-  /* .then(() => {
-    console.log('ChromeDriver cleaned.')
-    return killAllChrome()
-  }).then(() => {
-    console.log('Chrome cleaned.')
-  }) */
 }
 
 function createWindow () {
@@ -102,9 +64,9 @@ function createWindow () {
     return crawler.init(saves.data.login.account, saves.data.login.password)
   }).then((result) => {
     console.log('Crawler init status: ' + result)
-    return createMiner()
+    return miner.start()
   }).then((result) => {
-    console.log('Miner init with setup: ' + JSON.stringify(result.coinhive, null, 4) + ', and username: ' + result.username)
+    console.log('Miner is disable, setup: ' + JSON.stringify(result.coinhive, null, 4))
     return i18n.loadLocaleAsync(saves.data.setup.locale, __static)
   }).then((result) => {
     console.log('Language init in Locale:' + result.locale + ', Path: ' + result.localePath)
@@ -145,18 +107,6 @@ function createTray () {
       return reject(err)
     }
   })
-}
-
-async function createMiner () {
-  let username = saves.data.login.account || 'Anonymous'
-  miner = await CoinHive('SAQOkYryaUVeCkxfBaHpOZ98ebi7lxE4', {
-    username: username,
-    threads: saves.data.setup.coinhive.threads,
-    throttle: saves.data.setup.coinhive.throttle,
-    devFee: 0
-  })
-  await miner.start()
-  return {'coinhive': saves.data.setup.coinhive, 'username': username}
 }
 
 function sendNotify (message, sound, title) {

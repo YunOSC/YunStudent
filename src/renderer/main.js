@@ -67,7 +67,7 @@ const vue = new Vue({
   },
   template: '<App/>',
   created: function () {
-    this.$mainIpc.send('renderer-created')
+    setTimeout(() => this.$mainIpc.send('renderer-created'), 5000)
   }
 }).$mount('#app')
 
